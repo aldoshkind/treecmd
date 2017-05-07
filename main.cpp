@@ -28,6 +28,11 @@ std::string absolute_path(std::string p)
 		return p;
 	}
 
+	if(p[0] == '.')
+	{
+		p = current_node_path + "/" + p;
+	}
+
 	clean_path(p);
 
 	auto dot_pos = p.find_first_of('.');
@@ -68,7 +73,7 @@ void cd(const tokens_t &t)
 		}
 		else
 		{
-			printf("does not exist\n");
+			printf("\"%s\" does not exist\n", path.c_str());
 		}
 	}
 }
@@ -88,14 +93,39 @@ void ls(const tokens_t &t)
 	node *n = root.at(path);
 	if(n == nullptr)
 	{
-		printf("%s does not exist\n", path.c_str());
+		printf("\"%s\" does not exist\n", path.c_str());
 		return;
 	}
 	node::ls_list_t items = n->ls();
-	printf("total: %d items\n", items.size());
+	printf("total: %d items\n", (int)items.size());
 	for(auto item : items)
 	{
 		printf("%s\n", item.c_str());
+	}
+}
+
+void lsprops(const tokens_t &t)
+{
+	std::string path;
+
+	if(t.size() < 2)
+	{
+		path = current_node_path;
+	}
+	else
+	{
+		path = t[1];
+	}
+	node *n = root.at(path);
+	if(n == nullptr)
+	{
+		printf("%s does not exist\n", path.c_str());
+		return;
+	}
+	node::props_t props = n->get_properties();
+	for(auto prop : props)
+	{
+		printf("%s %s\n", prop->get_type().c_str(), prop->get_name().c_str());
 	}
 }
 
@@ -256,14 +286,22 @@ void init_commands()
 	commands["mk"] = mknode;
 	commands["ls"] = ls;
 	commands["rm"] = rm;
+	commands["lsprops"] = lsprops;
 }
 
 int main()
 {
 	init_commands();
 
+	node *tmp = root.append("tmp");
+	tmp->add_property(new property_value<double>("roll"));
+	tmp->add_property(new property_value<double>("pitch"));
+	root.append("a/b/c/d/e/f");
+	current_node_path = "/a/b/c/d/e/f";
+
 	char *input, shell_prompt[] = " > ";
 	rl_bind_key('\t', tab);
+	rl_bind_keyseq ("\\C-c", tab);		// doesnt work at the moment
 
 	for( ; ; )
 	{
