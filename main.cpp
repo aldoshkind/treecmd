@@ -425,6 +425,33 @@ void types(const tokens_t &/*t*/)
 	}
 }
 
+void print_node(node *n, int level = 0, bool last = true)
+{
+	if(n == NULL)
+	{
+		return;
+	}
+	std::string name = n->get_name();
+	name = name.size() ? name : "/";
+	printf("%-*s%s%s\n", level > 1 ? level - 1 : 0, "", level == 0 ? "" : (last ? "\e(0\x6d\e(B" : "\e(0\x74\e(B"), name.c_str());
+	node::children_t children = n->get_children();
+	for(node::children_t::size_type i = 0 ; i < children.size() ; i += 1)
+	{
+		print_node(children[i], level + 1, i == children.size() - 1);
+	}
+}
+
+void tree(const tokens_t &t)
+{
+	std::string path = current_node_path;
+	if(t.size() > 1)
+	{
+		path = t[1];
+	}
+	node *n = root.at(path);
+	print_node(n);
+}
+
 void init()
 {
 	commands["exit"] = exit_cmd;
@@ -436,6 +463,7 @@ void init()
 	commands["rm"] = rm;
 	commands["lsprops"] = lsprops;
 	commands["types"] = types;
+	commands["tree"] = tree;
 
 	setters["d"] = setter_double;
 	getters["d"] = getter_double;
