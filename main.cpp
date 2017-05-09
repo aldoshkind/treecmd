@@ -425,7 +425,21 @@ void types(const tokens_t &/*t*/)
 	}
 }
 
-void print_node(node *n, int level = 0, bool last = true)
+void replace_if_at_end(std::string &str, char *pattern, char *replacement)
+{
+	if(str.size() < strlen(pattern))
+	{
+		return;
+	}
+
+	if(strncmp(str.c_str() + str.size() - strlen(pattern), pattern, strlen(pattern)) == 0)
+	{
+		str.resize(str.size() - strlen(pattern));
+		str += replacement;
+	}
+}
+
+void print_node(node *n, std::string prefix = "")
 {
 	if(n == NULL)
 	{
@@ -433,11 +447,14 @@ void print_node(node *n, int level = 0, bool last = true)
 	}
 	std::string name = n->get_name();
 	name = name.size() ? name : "/";
-	printf("%-*s%s%s\n", level > 1 ? level - 1 : 0, "", level == 0 ? "" : (last ? "\e(0\x6d\e(B" : "\e(0\x74\e(B"), name.c_str());
+	printf("%s%s\n", prefix.c_str(), name.c_str());
 	node::children_t children = n->get_children();
+	replace_if_at_end(prefix, "\u251c", "\u2502");
+	replace_if_at_end(prefix, "\u2514", " ");
+
 	for(node::children_t::size_type i = 0 ; i < children.size() ; i += 1)
 	{
-		print_node(children[i], level + 1, i == children.size() - 1);
+		print_node(children[i], prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
 	}
 }
 
@@ -449,6 +466,11 @@ void tree(const tokens_t &t)
 		path = t[1];
 	}
 	node *n = root.at(path);
+	if(n == NULL)
+	{
+		printf("node does not exist\n");
+		return;
+	}
 	print_node(n);
 }
 
