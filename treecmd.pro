@@ -3,6 +3,8 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
+INCLUDEPATH += ./treeipc
+
 SOURCES += main.cpp \
     tree/filepath_utils.cpp \
     tree/resource.cpp \
@@ -21,4 +23,5 @@ HEADERS += \
     tree/resource.h \
     reliable_serial.h \
     socket_client.h \
-    io_service.h
+    io_service.h \
+    treeipc/observable.h
