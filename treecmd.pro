@@ -9,7 +9,7 @@ SOURCES += main.cpp \
     tree/filepath_utils.cpp \
     tree/resource.cpp \
     socket_client.cpp \
-    io_service.cpp \
+    treeipc/io_service.cpp \
     treeipc/client.cpp \
     treeipc/package.cpp \
     treeipc/client_node.cpp \
@@ -21,7 +21,8 @@ HEADERS += \
     tree/filepath_utils.h \
     tree/node.h \
     tree/resource.h \
-    reliable_serial.h \
+    treeipc/reliable_serial.h \
     socket_client.h \
-    io_service.h \
-    treeipc/observable.h
+    treeipc/io_service.h \
+    treeipc/observable.h \
+    treeipc/device.h

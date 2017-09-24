@@ -16,6 +16,7 @@
 #include "observable.h"
 #include "reliable_serial.h"
 #include "socket_client.h"
+#include "socket_device.h"
 
 typedef std::vector<std::string> tokens_t;
 typedef void (*command_t)(const tokens_t &);
@@ -496,202 +497,6 @@ void init()
 	getters["d"] = getter_double;
 }
 
-class package_codec : public one_to_one_observable<void, const package &>, public reliable_serial::listener
-{
-	reliable_serial *transport;
-
-	//package buffer;
-	std::vector<uint8_t> buffer;
-	int left;
-
-	void process_notification(const void *data, size_t size)
-	{
-		if(left == 0)
-		{
-			for( ; buffer.size() < sizeof(int) && size > 0 ; )
-			{
-				buffer.push_back(*((char *)data++));
-				size -= 1;
-			}
-
-			if(buffer.size() == sizeof(int))
-			{
-				left = *(int *)(&buffer[0]);
-
-				if(left > 4096)
-				{
-					left = 0;
-					buffer.erase(buffer.begin());
-					// тут происходит непонятно что. видимо надо закрывать соединение
-					return;
-				}
-				buffer.clear();
-				buffer.reserve(left);
-			}
-		}
-
-		if(left != 0)
-		{
-			buffer.insert(buffer.end(), (char *)data, (char *)data + size);
-		}
-
-		if(buffer.size() >= left)
-		{
-			package result;
-			result.resize(left);
-			memcpy(&(result[0]), &(buffer[0]), left);
-
-			notify(result);
-
-			buffer.erase(buffer.begin(), buffer.begin() + left);
-		}
-	}
-
-public:
-	package_codec()
-	{
-		left = 0;
-		transport = nullptr;
-	}
-
-	~package_codec()
-	{
-		//
-	}
-
-	void set_transport(reliable_serial *rs)
-	{
-		rs->set_listener(this);
-		transport = rs;
-	}
-
-	bool write(const package &p)
-	{
-		if(transport == nullptr)
-		{
-			return false;
-		}
-
-		int size = p.size();
-		size_t written = 0;
-		written += transport->write(&size, sizeof(size));
-		written += transport->write(&(p[0]), size);
-
-		return (written == (p.size() + sizeof(size)));
-	}
-};
-
-#include <boost/asio.hpp>
-
-class socket_device : public device, public one_to_one_observable<void, const package &>::listener
-{
-	package_codec *pc;
-
-	package in;
-
-	typedef uint16_t	msgid_t;
-	msgid_t msgid = 0;
-
-	std::mutex					senders_mutex;
-	typedef std::map<msgid_t, std::condition_variable>	sender_condvars_t;
-	sender_condvars_t			sender_condvars;
-	typedef std::map<msgid_t, bool>	sender_ready_flags_t;
-	sender_ready_flags_t			sender_response_received;
-
-
-	msgid_t get_msgid()
-	{
-		return msgid++;
-	}
-
-	void release_msgid(msgid_t)
-	{
-		//
-	}
-
-public:
-	socket_device(reliable_serial *rs) : pc(new package_codec)
-	{
-		get_msgid();
-		pc->set_listener(this);
-		pc->set_transport(rs);
-	}
-
-	~socket_device()
-	{
-		delete pc;
-	}
-
-	void process_notification(const package &p)
-	{
-		uint16_t msgid = p.read<msgid_t>(0);
-
-		package res;
-		int pack_size = p.size() - sizeof(msgid);
-		res.resize(pack_size);
-		p.read(sizeof(msgid), &(res[0]), pack_size);
-
-		std::lock_guard<std::mutex> lg(senders_mutex);
-
-		if(msgid != 0)
-		{
-			in = p;
-			sender_response_received[msgid] = true;
-			sender_condvars[msgid].notify_one();
-		}
-		else
-		{
-			notify(res);
-		}
-
-		release_msgid(msgid);
-	}
-
-	bool				write				(const package_t &p)
-	{
-		package buf;
-		buf.append((uint16_t)0);
-		buf.append(&(p[0]), p.size());
-
-		return pc->write(buf);
-	}
-
-	bool				send				(package_t req, package_t &resp)
-	{
-		package buf;
-		buf.append((uint16_t)0);
-		buf.append(&(req[0]), req.size());
-
-		std::unique_lock<decltype(senders_mutex)> lock(senders_mutex);
-		msgid_t mid = get_msgid();
-		bool ok = write(buf);
-
-		if(ok == false)
-		{
-			release_msgid(mid);
-			return false;
-		}
-
-		sender_response_received[mid] = false;
-		while(sender_response_received[mid] == false)
-		{
-			sender_condvars[mid].wait(lock);
-		}
-
-		resp = in;
-
-		return true;
-	}
-};
-
-
-
-
-
-
-
-
-
 int main(int argc, char **argv)
 {
 	std::string host = "127.0.0.1";
@@ -717,7 +522,7 @@ int main(int argc, char **argv)
 	client cl;
 	cl.set_device(&sd);
 
-	root.attach("/", cl.get_root(), false);
+	root.attach("/test", cl.get_root(), false);
 
 	current_node_path = "/";
 
