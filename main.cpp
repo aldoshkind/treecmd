@@ -489,7 +489,7 @@ void init()
 	commands["mk"] = mknode;
 	commands["ls"] = ls;
 	commands["rm"] = rm;
-	commands["lsprops"] = lsprops;
+	commands["lsp"] = lsprops;
 	commands["types"] = types;
 	commands["tree"] = tree;
 

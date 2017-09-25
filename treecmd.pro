@@ -25,4 +25,5 @@ HEADERS += \
     socket_client.h \
     treeipc/io_service.h \
     treeipc/observable.h \
-    treeipc/device.h
+    treeipc/device.h \
+    treeipc/socket_device.h
