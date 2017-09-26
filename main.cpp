@@ -15,7 +15,7 @@
 #include "treeipc/client.h"
 #include "observable.h"
 #include "reliable_serial.h"
-#include "socket_client.h"
+#include "treeipc/socket_client.h"
 #include "socket_device.h"
 
 typedef std::vector<std::string> tokens_t;
@@ -454,13 +454,22 @@ void print_node(node *n, std::string prefix = "")
 	std::string name = n->get_name();
 	name = name.size() ? name : "/";
 	printf("%s%s\n", prefix.c_str(), name.c_str());
-	node::children_t children = n->get_children();
 	replace_if_at_end(prefix, "\u251c", "\u2502");
 	replace_if_at_end(prefix, "\u2514", " ");
 
-	for(node::children_t::size_type i = 0 ; i < children.size() ; i += 1)
+	//node::children_t children = n->get_children();
+	node::ls_list_t children = n->ls();
+
+	for(node::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
 	{
-		print_node(children[i], prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
+		node *child = n->at(children[i]);
+
+		if(child == NULL)
+		{
+			continue;
+		}
+
+		print_node(child, prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
 	}
 }
 
@@ -516,7 +525,10 @@ int main(int argc, char **argv)
 
 	init();
 
-	socket_client sc(host, port);
+	socket_client sc;
+	connector conn;
+	conn.set_listener(&sc);
+	conn.connect(host, port);
 	socket_device sd(&sc);
 
 	client cl;

@@ -1,3 +1,5 @@
+#ifdef TEMPORARY_EXCLUDED
+
 #include "socket_client.h"
 
 #include "boost/bind.hpp"
@@ -94,3 +96,5 @@ void socket_client::data_ready(const boost::system::error_code &e, size_t bytes_
 									 )
 						 );
 }
+
+#endif

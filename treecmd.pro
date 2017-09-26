@@ -8,12 +8,12 @@ INCLUDEPATH += ./treeipc
 SOURCES += main.cpp \
     tree/filepath_utils.cpp \
     tree/resource.cpp \
-    socket_client.cpp \
     treeipc/io_service.cpp \
     treeipc/client.cpp \
     treeipc/package.cpp \
     treeipc/client_node.cpp \
-    tree/property_listener.cpp
+    tree/property_listener.cpp \
+    treeipc/socket_client.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
@@ -26,4 +26,5 @@ HEADERS += \
     treeipc/io_service.h \
     treeipc/observable.h \
     treeipc/device.h \
-    treeipc/socket_device.h
+    treeipc/socket_device.h \
+    treeipc/socket_client.h
