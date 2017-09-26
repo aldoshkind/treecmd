@@ -457,7 +457,6 @@ void print_node(node *n, std::string prefix = "")
 	replace_if_at_end(prefix, "\u251c", "\u2502");
 	replace_if_at_end(prefix, "\u2514", " ");
 
-	//node::children_t children = n->get_children();
 	node::ls_list_t children = n->ls();
 
 	for(node::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
