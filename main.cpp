@@ -11,6 +11,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include "tree/node.h"
 #include "treeipc/client.h"
 #include "observable.h"
@@ -51,7 +53,7 @@ std::string absolute_path(std::string p)
 
 	clean_path(p);
 
-	auto dot_pos = p.find_first_of('.');
+	auto dot_pos = p.find_last_of('.');
 
 	if(dot_pos != std::string::npos)
 	{
@@ -477,7 +479,7 @@ void tree(const tokens_t &t)
 	std::string path = current_node_path;
 	if(t.size() > 1)
 	{
-		path = t[1];
+		path = absolute_path(t[1]);
 	}
 	node *n = root.at(path);
 	if(n == NULL)
@@ -509,17 +511,20 @@ int main(int argc, char **argv)
 {
 	std::string host = "127.0.0.1";
 	int port = 12326;
+	std::string port_str = "12326";
 	if(argc > 1)
 	{
 		host = std::string(argv[1]);
 	}
 	if(argc > 2)
 	{
-		int rd_port = strtol(argv[2], NULL, 10);
-		if(rd_port > 0 && rd_port < 65535)
-		{
-			port = rd_port;
-		}
+		port_str = std::string(argv[2]);
+	}
+
+	int rd_port = strtol(port_str.c_str(), NULL, 10);
+	if(rd_port > 0 && rd_port < 65535)
+	{
+		port = rd_port;
 	}
 
 	init();
@@ -532,8 +537,11 @@ int main(int argc, char **argv)
 
 	client cl;
 	cl.set_device(&sd);
+	sd.set_listener(&cl);
 
-	root.attach("/test", cl.get_root(), false);
+	boost::erase_all(host, ".");
+
+	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
 
 	current_node_path = "/";
 
