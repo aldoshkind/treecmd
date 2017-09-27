@@ -106,7 +106,7 @@ void ls(const tokens_t &t)
 	}
 	else
 	{
-		path = t[1];
+		path = absolute_path(t[1]);
 	}
 	node *n = root.at(path);
 	if(n == nullptr)
@@ -132,7 +132,7 @@ void lsprops(const tokens_t &t)
 	}
 	else
 	{
-		path = t[1];
+		path = absolute_path(t[1]);
 	}
 	node *n = root.at(path);
 	if(n == nullptr)
