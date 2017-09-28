@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     treeipc/package.cpp \
     treeipc/client_node.cpp \
     tree/property_listener.cpp \
-    treeipc/socket_client.cpp
+    treeipc/socket_client.cpp \
+    cmd.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
@@ -27,4 +28,5 @@ HEADERS += \
     treeipc/observable.h \
     treeipc/device.h \
     treeipc/socket_device.h \
-    treeipc/socket_client.h
+    treeipc/socket_client.h \
+    cmd.h

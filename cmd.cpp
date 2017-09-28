@@ -1,29 +1,76 @@
-#include <cmd.h>
+#include "cmd.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include <string>
-#include <vector>
-#include <map>
 #include <sstream>
-#include <condition_variable>
-#include <functional>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/bind.hpp>
+//#include <boost/bind/placeholders.hpp>
 
-#include "tree/node.h"
-#include "treeipc/client.h"
-#include "observable.h"
-#include "reliable_serial.h"
-#include "treeipc/socket_client.h"
-#include "socket_device.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 
-node root;
+int tab(int, int);
 
-#ifdef TEMP_EXCL
-std::string absolute_path(std::string p)
+cmd::cmd(node *root)
+{
+	this->root = root;
+
+	init();
+}
+
+cmd::~cmd()
+{
+	//
+}
+
+
+void cmd::init()
+{
+	commands["exit"] = boost::bind(&cmd::exit_cmd, this, _1);
+	commands["help"] = boost::bind(&cmd::help, this, _1);
+	commands["pwd"] = boost::bind(&cmd::pwd, this, _1);
+	commands["cd"] = boost::bind(&cmd::cd, this, _1);
+	commands["mk"] = boost::bind(&cmd::mknode, this, _1);
+	commands["ls"] = boost::bind(&cmd::ls, this, _1);
+	commands["rm"] = boost::bind(&cmd::rm, this, _1);
+	commands["lsp"] = boost::bind(&cmd::lsprops, this, _1);
+	commands["types"] = boost::bind(&cmd::types, this, _1);
+	commands["tree"] = boost::bind(&cmd::tree, this, _1);
+
+	/*
+
+	setters["d"] = setter_double;
+	getters["d"] = getter_double;*/
+}
+
+void cmd::run()
+{
+	current_node_path = "/";
+
+	char *input, shell_prompt[] = " > ";
+	rl_bind_key('\t', tab);
+	rl_bind_keyseq ("\\C-c", tab);		// doesnt work at the moment
+
+	for( ; ; )
+	{
+		input = readline((current_node_path + shell_prompt).c_str());
+
+		if(input == NULL)
+		{
+			break;
+		}
+
+		tokens_t ts = tokenize(input);
+		exec(ts);
+
+		if(strlen(input) != 0)
+		{
+			add_history(input);
+		}
+		free(input);
+	}
+}
+
+std::string cmd::absolute_path(std::string p)
 {
 	if(p.size() == 0)
 	{
@@ -54,12 +101,12 @@ std::string absolute_path(std::string p)
 	return p;
 }
 
-void pwd(const tokens_t &)
+void cmd::pwd(const tokens_t &)
 {
 	printf("%s\n", current_node_path.c_str());
 }
 
-void cd(const tokens_t &t)
+void cmd::cd(const tokens_t &t)
 {
 	if(t.size() < 2)
 	{
@@ -68,7 +115,7 @@ void cd(const tokens_t &t)
 	else
 	{
 		std::string path = absolute_path(t[1]);
-		node *n = root.at(path);
+		node *n = root->at(path);
 		if(n != nullptr)
 		{
 			current_node_path = path;
@@ -80,7 +127,7 @@ void cd(const tokens_t &t)
 	}
 }
 
-void ls(const tokens_t &t)
+void cmd::ls(const tokens_t &t)
 {
 	std::string path;
 
@@ -92,7 +139,7 @@ void ls(const tokens_t &t)
 	{
 		path = absolute_path(t[1]);
 	}
-	node *n = root.at(path);
+	node *n = root->at(path);
 	if(n == nullptr)
 	{
 		printf("\"%s\" does not exist\n", path.c_str());
@@ -106,7 +153,7 @@ void ls(const tokens_t &t)
 	}
 }
 
-void lsprops(const tokens_t &t)
+void cmd::lsprops(const tokens_t &t)
 {
 	std::string path;
 
@@ -118,7 +165,7 @@ void lsprops(const tokens_t &t)
 	{
 		path = absolute_path(t[1]);
 	}
-	node *n = root.at(path);
+	node *n = root->at(path);
 	if(n == nullptr)
 	{
 		printf("%s does not exist\n", path.c_str());
@@ -131,7 +178,7 @@ void lsprops(const tokens_t &t)
 	}
 }
 
-int setter_double(property_base *p, const std::string &value)
+int cmd::setter_double(property_base *p, const std::string &value)
 {
 	property<double> *pd = dynamic_cast<property<double> *>(p);
 
@@ -145,7 +192,7 @@ int setter_double(property_base *p, const std::string &value)
 	return 0;
 }
 
-int getter_double(property_base *p, std::string &value)
+int cmd::getter_double(property_base *p, std::string &value)
 {
 	property<double> *pd = dynamic_cast<property<double> *>(p);
 
@@ -161,7 +208,7 @@ int getter_double(property_base *p, std::string &value)
 	return 0;
 }
 
-void set(node *n, std::string &prop, std::string value)
+void cmd::set(node *n, std::string &prop, std::string value)
 {
 	property_base *p = n->get_property(prop);
 	if(p == NULL)
@@ -186,7 +233,7 @@ void set(node *n, std::string &prop, std::string value)
 	//printf("set property %s has type %s\n", prop.c_str(), p->get_type().c_str());
 }
 
-void set(const std::string &target, const std::string &value)
+void cmd::set(const std::string &target, const std::string &value)
 {
 	std::string::size_type dot_pos = target.find_last_of('.');
 	if(dot_pos == std::string::npos)
@@ -197,7 +244,7 @@ void set(const std::string &target, const std::string &value)
 	std::string path = target.substr(0, dot_pos);
 	std::string prop_name = target.substr(dot_pos + 1);
 
-	node *n = root.at(absolute_path(path));
+	node *n = root->at(absolute_path(path));
 	if(n == nullptr)
 	{
 		printf("%s does not exist\n", path.c_str());
@@ -206,7 +253,7 @@ void set(const std::string &target, const std::string &value)
 	set(n, prop_name, value);
 }
 
-void print(const std::string &target)
+void cmd::print(const std::string &target)
 {
 	std::string::size_type dot_pos = target.find_last_of('.');
 	if(dot_pos == std::string::npos)
@@ -217,7 +264,7 @@ void print(const std::string &target)
 	std::string path = target.substr(0, dot_pos);
 	std::string prop = target.substr(dot_pos + 1);
 
-	node *n = root.at(absolute_path(path));
+	node *n = root->at(absolute_path(path));
 	if(n == nullptr)
 	{
 		printf("%s does not exist\n", path.c_str());
@@ -249,7 +296,7 @@ void print(const std::string &target)
 	//printf("print property %s has type %s\n", prop.c_str(), p->get_type().c_str());
 }
 
-void eval(const tokens_t &tok)
+void cmd::eval(const tokens_t &tok)
 {
 	if(tok.size() == 0)
 	{
@@ -275,7 +322,7 @@ void eval(const tokens_t &tok)
 	set(path, value);
 }
 
-tokens_t tokenize(const std::string &str)
+cmd::tokens_t cmd::tokenize(const std::string &str)
 {
 	tokens_t res;
 	std::string::size_type pos = 0;
@@ -313,7 +360,7 @@ tokens_t tokenize(const std::string &str)
 	return res;
 }
 
-void exec(const tokens_t &cmd)
+void cmd::exec(const tokens_t &cmd)
 {
 	if(cmd.size() < 1)
 	{
@@ -331,17 +378,12 @@ void exec(const tokens_t &cmd)
 	}
 }
 
-int tab(int, int)
-{
-	return 0;
-}
-
-void exit_cmd(const tokens_t &)
+void cmd::exit_cmd(const tokens_t &)
 {
 	exit(0);
 }
 
-void help(const tokens_t &)
+void cmd::help(const tokens_t &)
 {
 	printf("available commands:\n");
 	for(commands_t::iterator it = commands.begin() ; it != commands.end() ; ++it)
@@ -350,14 +392,14 @@ void help(const tokens_t &)
 	}
 }
 
-void mknode(const tokens_t &t)
+void cmd::mknode(const tokens_t &t)
 {
 	std::string status;
 	for(tokens_t::size_type i = 1 ; i < t.size() ; i += 1)
 	{
 		std::string path = absolute_path(t[i]);
 
-		node *n = root.at(path);
+		node *n = root->at(path);
 
 		if(n != nullptr)
 		{
@@ -365,7 +407,7 @@ void mknode(const tokens_t &t)
 		}
 		else
 		{
-			n = root.generate(path);
+			n = root->generate(path);
 			if(n != nullptr)
 			{
 				status = "created";
@@ -380,14 +422,14 @@ void mknode(const tokens_t &t)
 	}
 }
 
-void rm(const tokens_t &t)
+void cmd::rm(const tokens_t &t)
 {
 	std::string status;
 	for(tokens_t::size_type i = 1 ; i < t.size() ; i += 1)
 	{
 		std::string path = absolute_path(t[i]);
 
-		node *n = root.at(path);
+		node *n = root->at(path);
 
 		if(n == nullptr)
 		{
@@ -395,7 +437,7 @@ void rm(const tokens_t &t)
 		}
 		else
 		{
-			root.remove(path, true);
+			root->remove(path, true);
 			status = "removed";
 		}
 
@@ -403,7 +445,7 @@ void rm(const tokens_t &t)
 	}
 }
 
-void types(const tokens_t &/*t*/)
+void cmd::types(const tokens_t &/*t*/)
 {
 	printf("set:\n");
 	for(auto setter : setters)
@@ -417,7 +459,7 @@ void types(const tokens_t &/*t*/)
 	}
 }
 
-void replace_if_at_end(std::string &str, char *pattern, char *replacement)
+void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
 {
 	if(str.size() < strlen(pattern))
 	{
@@ -431,7 +473,7 @@ void replace_if_at_end(std::string &str, char *pattern, char *replacement)
 	}
 }
 
-void print_node(node *n, std::string prefix = "")
+void cmd::print_node(node *n, std::string prefix)
 {
 	if(n == NULL)
 	{
@@ -458,14 +500,14 @@ void print_node(node *n, std::string prefix = "")
 	}
 }
 
-void tree(const tokens_t &t)
+void cmd::tree(const tokens_t &t)
 {
 	std::string path = current_node_path;
 	if(t.size() > 1)
 	{
 		path = absolute_path(t[1]);
 	}
-	node *n = root.at(path);
+	node *n = root->at(path);
 	if(n == NULL)
 	{
 		printf("node does not exist\n");
@@ -474,47 +516,7 @@ void tree(const tokens_t &t)
 	print_node(n);
 }
 
-#endif //TEMP
-
-
-int main(int argc, char **argv)
+int tab(int, int)
 {
-	std::string host = "127.0.0.1";
-	int port = 12326;
-	std::string port_str = "12326";
-	if(argc > 1)
-	{
-		host = std::string(argv[1]);
-	}
-	if(argc > 2)
-	{
-		port_str = std::string(argv[2]);
-	}
-
-	int rd_port = strtol(port_str.c_str(), NULL, 10);
-	if(rd_port > 0 && rd_port < 65535)
-	{
-		port = rd_port;
-	}
-
-	//init();
-
-	socket_client sc;
-	connector conn;
-	conn.set_listener(&sc);
-	conn.connect(host, port);
-	socket_device sd(&sc);
-
-	client cl;
-	cl.set_device(&sd);
-	sd.set_listener(&cl);
-
-	boost::erase_all(host, ".");
-
-	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
-
-	cmd c(&root);
-	c.run();
-
-	return 0;//c.return_code();
+	return 0;
 }
