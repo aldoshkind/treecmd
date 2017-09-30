@@ -36,10 +36,8 @@ void cmd::init()
 	commands["types"] = boost::bind(&cmd::types, this, _1);
 	commands["tree"] = boost::bind(&cmd::tree, this, _1);
 
-	/*
-
-	setters["d"] = setter_double;
-	getters["d"] = getter_double;*/
+	setters["d"] = boost::bind(&cmd::setter_double, this, _1, _2);
+	getters["d"] = boost::bind(&cmd::getter_double, this, _1, _2);
 }
 
 void cmd::run()
