@@ -25,6 +25,7 @@ HEADERS += \
     treeipc/reliable_serial.h \
     socket_client.h \
     treeipc/io_service.h \
+	treeipc/client.h \
     treeipc/observable.h \
     treeipc/device.h \
     treeipc/socket_device.h \

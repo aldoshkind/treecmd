@@ -1,12 +1,11 @@
 #include "cmd.h"
 
-#include <sstream>
-
 #include <boost/bind.hpp>
-//#include <boost/bind/placeholders.hpp>
 
 #include <readline/readline.h>
 #include <readline/history.h>
+
+using namespace treecmd;
 
 int tab(int, int);
 
@@ -30,16 +29,27 @@ void cmd::init()
 	commands["pwd"] = boost::bind(&cmd::pwd, this, _1);
 	commands["cd"] = boost::bind(&cmd::cd, this, _1);
 	commands["mk"] = boost::bind(&cmd::mknode, this, _1);
+	commands["mkp"] = boost::bind(&cmd::mkprop, this, _1);
 	commands["ls"] = boost::bind(&cmd::ls, this, _1);
 	commands["rm"] = boost::bind(&cmd::rm, this, _1);
 	commands["lsp"] = boost::bind(&cmd::lsprops, this, _1);
 	commands["types"] = boost::bind(&cmd::types, this, _1);
 	commands["tree"] = boost::bind(&cmd::tree, this, _1);
 
-	setters["d"] = boost::bind(&cmd::setter_double, this, _1, _2);
-	getters["d"] = boost::bind(&cmd::getter_double, this, _1, _2);
+	add_gsg(new numeric_property_gsg<double>());
+	add_gsg(new numeric_property_gsg<float>());
+	add_gsg(new numeric_property_gsg<int>());
+	add_gsg(new numeric_property_gsg<long>());
 }
 
+void cmd::add_gsg(property_gsg *gsg)
+{
+	auto type = gsg->get_typeid();
+
+	setters[type] = gsg;
+	getters[type] = gsg;
+	generators[type] = gsg;
+}
 void cmd::run()
 {
 	current_node_path = "/";
@@ -176,36 +186,6 @@ void cmd::lsprops(const tokens_t &t)
 	}
 }
 
-int cmd::setter_double(property_base *p, const std::string &value)
-{
-	property<double> *pd = dynamic_cast<property<double> *>(p);
-
-	if(pd == NULL)
-	{
-		return -1;
-	}
-
-	pd->set_value(strtod(value.c_str(), NULL));
-
-	return 0;
-}
-
-int cmd::getter_double(property_base *p, std::string &value)
-{
-	property<double> *pd = dynamic_cast<property<double> *>(p);
-
-	if(pd == NULL)
-	{
-		return -1;
-	}
-
-	std::stringstream render;
-	render << pd->get_value();
-	value = render.str();
-
-	return 0;
-}
-
 void cmd::set(node *n, std::string &prop, std::string value)
 {
 	property_base *p = n->get_property(prop);
@@ -221,7 +201,7 @@ void cmd::set(node *n, std::string &prop, std::string value)
 		printf("dont know how to handle value of type %s\n", p->get_type().c_str());
 		return;
 	}
-	int res = (it->second)(p, value);
+	int res = it->second->set(p, value);
 	if(res != 0)
 	{
 		printf("error setting value\n");
@@ -283,7 +263,7 @@ void cmd::print(const std::string &target)
 		return;
 	}
 	std::string value;
-	int res = (it->second)(p, value);
+	int res = it->second->get(p, value);
 	if(res != 0)
 	{
 		printf("error getting value\n");
@@ -448,12 +428,17 @@ void cmd::types(const tokens_t &/*t*/)
 	printf("set:\n");
 	for(auto setter : setters)
 	{
-		printf("\t%s\n", setter.first.c_str());
+		printf("\t%s\t%s\n", setter.first.c_str(), setter.second->get_typename().c_str());
 	}
 	printf("get:\n");
 	for(auto getter : getters)
 	{
-		printf("\t%s\n", getter.first.c_str());
+		printf("\t%s\t%s\n", getter.first.c_str(), getter.second->get_typename().c_str());
+	}
+	printf("generate:\n");
+	for(auto generator : generators)
+	{
+		printf("\t%s\t%s\n", generator.first.c_str(), generator.second->get_typename().c_str());
 	}
 }
 
@@ -517,4 +502,47 @@ void cmd::tree(const tokens_t &t)
 int tab(int, int)
 {
 	return 0;
+}
+
+void cmd::mkprop(const tokens_t &toks)
+{
+	if(toks.size() < 3)
+	{
+		printf("usage: %s name type\n", toks[0].c_str());
+		return;
+	}
+
+	std::string::size_type dot_pos = toks[1].find_last_of('.');
+	if(dot_pos == std::string::npos)
+	{
+		printf("property not specified\n");
+		return;
+	}
+	std::string path = toks[1].substr(0, dot_pos);
+	std::string prop_name = toks[1].substr(dot_pos + 1);
+
+	path = absolute_path(path);
+
+	node *n = root->at(path);
+	if(n == NULL)
+	{
+		printf("node %s does not exist\n", path.c_str());
+		return;
+	}
+
+	std::string type = toks[2];
+	generators_t::iterator it = generators.find(type);
+	if(it == generators.end())
+	{
+		printf("unkown type %s\n", type.c_str());
+		return;
+	}
+
+	property_base *p = it->second->generate(prop_name);
+	if(p == NULL)
+	{
+		printf("error allocating property\n", path.c_str());
+		return;
+	}
+	n->add_property(p);
 }

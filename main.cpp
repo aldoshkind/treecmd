@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
 
-	cmd c(&root);
+	treecmd::cmd c(&root);
 	c.run();
 
 	return 0;//c.return_code();
