@@ -544,5 +544,9 @@ void cmd::mkprop(const tokens_t &toks)
 		printf("error allocating property\n", path.c_str());
 		return;
 	}
-	n->add_property(p);
+	property_base *pa = n->add_property(p);
+	if(pa == NULL)
+	{
+		printf("error adding property\n");
+	}
 }

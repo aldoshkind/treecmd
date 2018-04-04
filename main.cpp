@@ -59,5 +59,5 @@ int main(int argc, char **argv)
 	treecmd::cmd c(&root);
 	c.run();
 
-	return 0;//c.return_code();
+	return 0;
 }

@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     treeipc/client_node.cpp \
     tree/property_listener.cpp \
     treeipc/socket_client.cpp \
-    cmd.cpp
+    cmd.cpp \
+    numeric_property_gsg.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
@@ -30,4 +31,9 @@ HEADERS += \
     treeipc/device.h \
     treeipc/socket_device.h \
     treeipc/socket_client.h \
-    cmd.h
+    cmd.h \
+    typeidable.h \
+    property_setter.h \
+    property_getter.h \
+    property_generator.h \
+    numeric_property_gsg.h
