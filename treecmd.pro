@@ -1,7 +1,7 @@
+QT += core
+
 TEMPLATE = app
 CONFIG += console c++11
-CONFIG -= app_bundle
-CONFIG -= qt
 
 INCLUDEPATH += ./treeipc
 
@@ -25,7 +25,6 @@ HEADERS += \
     tree/node.h \
     tree/resource.h \
     treeipc/reliable_serial.h \
-    socket_client.h \
     treeipc/io_service.h \
 	treeipc/client.h \
     treeipc/observable.h \

@@ -1,3 +1,8 @@
 *.user
+*.bak
 *~
 *.orig
+*.o
+[Mm]akefile
+moc_*.cpp
+treecmd
