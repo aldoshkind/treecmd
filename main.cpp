@@ -13,11 +13,10 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "tree/node.h"
-#include "treeipc/client.h"
+#include "client.h"
 #include "observable.h"
 #include "reliable_serial.h"
-#include "treeipc/socket_client.h"
+#include "socket_client.h"
 #include "socket_device.h"
 
 node root;
@@ -25,8 +24,8 @@ node root;
 int main(int argc, char **argv)
 {
 	std::string host = "127.0.0.1";
-	int port = 12326;
-	std::string port_str = "12326";
+	int port = 13233;
+	std::string port_str = "13233";
 	if(argc > 1)
 	{
 		host = std::string(argv[1]);
