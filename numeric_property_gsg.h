@@ -12,6 +12,8 @@
 #include "property_setter.h"
 #include "property_generator.h"
 
+#include <QString>
+
 namespace treecmd
 {
 
@@ -19,6 +21,60 @@ namespace treecmd
 class property_gsg : public property_setter, public property_getter, public property_generator
 {
 	//
+};
+
+class property_qstring_gsg : public property_gsg
+{
+public:
+	/*constructor*/ property_qstring_gsg(){}
+	/*destructor*/ ~property_qstring_gsg(){}
+
+	int set(property_base *prop, const std::string &value)
+	{
+		property<QString> *pd = dynamic_cast<property<QString> *>(prop);
+
+		if(pd == NULL)
+		{
+			return -1;
+		}
+
+		pd->set_value(QString::fromStdString(value));
+
+		return 0;
+	}
+
+	int get(property_base *prop, std::string &value)
+	{
+		property<QString> *pd = dynamic_cast<property<QString> *>(prop);
+
+		if(pd == NULL)
+		{
+			return -1;
+		}
+
+		value = pd->get_value().toStdString();
+
+		return 0;
+	}
+
+	property_base *generate(const std::string &name)
+	{
+		property_base *pd = new property_value<QString>(name);
+		return pd;
+	}
+
+	const std::string get_typeid() const
+	{
+		return typeid(QString).name();
+	}
+	const std::string get_typename() const
+	{
+		int status = 0;
+		char *n = abi::__cxa_demangle(get_typeid().c_str(), 0, 0, &status);
+		std::string name(n);
+		free(n);
+		return name;
+	}
 };
 
 template <typename type>

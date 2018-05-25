@@ -40,6 +40,7 @@ void cmd::init()
 	add_gsg(new numeric_property_gsg<float>());
 	add_gsg(new numeric_property_gsg<int>());
 	add_gsg(new numeric_property_gsg<long>());
+	add_gsg(new property_qstring_gsg());
 }
 
 void cmd::add_gsg(property_gsg *gsg)
