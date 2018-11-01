@@ -6,28 +6,30 @@
 
 #include <cxxabi.h>
 
-#include "tree/resource.h"
-
-#include "property_getter.h"
-#include "property_setter.h"
-#include "property_generator.h"
-
 #include <QString>
+
+#include <resource.h>
+#include "typeidable.h"
 
 namespace treecmd
 {
 
-// gsg значит getter-setter-generator
-class property_gsg : public property_setter, public property_getter, public property_generator
-{
-	//
-};
-
-class property_qstring_gsg : public property_gsg
+class type : public typeidable
 {
 public:
-	/*constructor*/ property_qstring_gsg(){}
-	/*destructor*/ ~property_qstring_gsg(){}
+	/*constructor*/ type() {}
+	virtual /*destructor*/ ~type(){}
+
+	virtual int set(property_base *, const std::string &) = 0;
+	virtual int get(property_base *, std::string &) = 0;
+	//virtual property_base *generate(const std::string &name) = 0;
+};
+
+class type_qstring : public type
+{
+public:
+	/*constructor*/ type_qstring(){}
+	/*destructor*/ ~type_qstring(){}
 
 	int set(property_base *prop, const std::string &value)
 	{
@@ -57,11 +59,11 @@ public:
 		return 0;
 	}
 
-	property_base *generate(const std::string &name)
+	/*property_base *generate(const std::string &name)
 	{
 		property_base *pd = new property_value<QString>(name);
 		return pd;
-	}
+	}*/
 
 	const std::string get_typeid() const
 	{
@@ -77,25 +79,25 @@ public:
 	}
 };
 
-template <typename type>
-class numeric_property_gsg : public property_gsg
+template <typename T>
+class type_numeric : public type
 {
 public:
-	/*constructor*/ numeric_property_gsg(){}
-	/*destructor*/ ~numeric_property_gsg(){}
+	/*constructor*/ type_numeric(){}
+	/*destructor*/ ~type_numeric(){}
 
 	int set(property_base *prop, const std::string & value);
 	int get(property_base *prop, std::string &value);
-	property_base *generate(const std::string &name);
+//	property_base *generate(const std::string &name);
 
 	const std::string get_typeid() const;
 	const std::string get_typename() const;
 };
 
-template <typename type>
-int numeric_property_gsg<type>::set(property_base *prop, const std::string & value)
+template <typename T>
+int type_numeric<T>::set(property_base *prop, const std::string & value)
 {
-	property<type> *pd = dynamic_cast<property<type> *>(prop);
+	property<T> *pd = dynamic_cast<property<T> *>(prop);
 
 	if(pd == NULL)
 	{
@@ -109,10 +111,10 @@ int numeric_property_gsg<type>::set(property_base *prop, const std::string & val
 	return 0;
 }
 
-template <typename type>
-int numeric_property_gsg<type>::get(property_base *prop, std::string &value)
+template <typename T>
+int type_numeric<T>::get(property_base *prop, std::string &value)
 {
-	property<type> *pd = dynamic_cast<property<type> *>(prop);
+	property<T> *pd = dynamic_cast<property<T> *>(prop);
 
 	if(pd == NULL)
 	{
@@ -126,21 +128,21 @@ int numeric_property_gsg<type>::get(property_base *prop, std::string &value)
 	return 0;
 }
 
-template <typename type>
-property_base *numeric_property_gsg<type>::generate(const std::string &name)
+/*template <typename type>
+property_base *type_numeric<type>::generate(const std::string &name)
 {
 	property_base *pd = new property_value<type>(name);
 	return pd;
-}
+}*/
 
-template <typename type>
-const std::string numeric_property_gsg<type>::get_typeid() const
+template <typename T>
+const std::string type_numeric<T>::get_typeid() const
 {
-	return typeid(type).name();
+	return typeid(T).name();
 }
 
-template <typename type>
-const std::string numeric_property_gsg<type>::get_typename() const
+template <typename T>
+const std::string type_numeric<T>::get_typename() const
 {
 	int status = 0;
 	char *n = abi::__cxa_demangle(get_typeid().c_str(), 0, 0, &status);

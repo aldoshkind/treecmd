@@ -9,7 +9,9 @@ using namespace treecmd;
 
 int tab(int, int);
 
-cmd::cmd(node *root)
+class tree_node_t;
+
+cmd::cmd(tree_node_t *root)
 {
 	this->root = root;
 
@@ -28,29 +30,26 @@ void cmd::init()
 	commands["help"] = boost::bind(&cmd::help, this, _1);
 	commands["pwd"] = boost::bind(&cmd::pwd, this, _1);
 	commands["cd"] = boost::bind(&cmd::cd, this, _1);
-	commands["mk"] = boost::bind(&cmd::mknode, this, _1);
-	commands["mkp"] = boost::bind(&cmd::mkprop, this, _1);
+	//commands["mk"] = boost::bind(&cmd::mknode, this, _1);
 	commands["ls"] = boost::bind(&cmd::ls, this, _1);
 	commands["rm"] = boost::bind(&cmd::rm, this, _1);
-	commands["lsp"] = boost::bind(&cmd::lsprops, this, _1);
-	commands["types"] = boost::bind(&cmd::types, this, _1);
+	commands["types"] = boost::bind(&cmd::get_types, this, _1);
 	commands["tree"] = boost::bind(&cmd::tree, this, _1);
 
-	add_gsg(new numeric_property_gsg<double>());
-	add_gsg(new numeric_property_gsg<float>());
-	add_gsg(new numeric_property_gsg<int>());
-	add_gsg(new numeric_property_gsg<long>());
-	add_gsg(new property_qstring_gsg());
+	add_type(new type_numeric<double>());
+	add_type(new type_numeric<float>());
+	add_type(new type_numeric<int>());
+	add_type(new type_numeric<long>());
+	add_type(new type_qstring());
 }
 
-void cmd::add_gsg(property_gsg *gsg)
+void cmd::add_type(type *t)
 {
-	auto type = gsg->get_typeid();
+	auto tp = t->get_typeid();
 
-	setters[type] = gsg;
-	getters[type] = gsg;
-	generators[type] = gsg;
+	types[tp] = t;
 }
+
 void cmd::run()
 {
 	current_node_path = "/";
@@ -124,7 +123,7 @@ void cmd::cd(const tokens_t &t)
 	else
 	{
 		std::string path = absolute_path(t[1]);
-		node *n = root->at(path);
+		tree_node_t *n = root->at(path);
 		if(n != nullptr)
 		{
 			current_node_path = path;
@@ -136,9 +135,44 @@ void cmd::cd(const tokens_t &t)
 	}
 }
 
+std::string cmd::render(tree_node_t *n, std::string &error)
+{
+	if(n == nullptr)
+	{
+		return "";
+	}
+
+	property_base *p = dynamic_cast<property_base *>(n);
+	if(p == nullptr)
+	{
+		//printf("Property %s does not exist\n", prop.c_str());
+		error = "Not a property";
+		return "";
+	}
+
+	types_t::iterator it = types.find(p->get_type());
+	if(it == types.end())
+	{
+		//printf("Dont know how to handle value of type '%s'\n", p->get_type().c_str());
+		error = "Dont know how to handle value";
+		return "";
+	}
+	std::string value;
+	int res = it->second->get(p, value);
+	if(res != 0)
+	{
+		//printf("Error getting value\n");
+		error = "Error getting value";
+		return "";
+	}
+
+	return value;
+}
+
 void cmd::ls(const tokens_t &t)
 {
 	std::string path;
+	bool show_values = false;
 
 	if(t.size() < 2)
 	{
@@ -146,66 +180,67 @@ void cmd::ls(const tokens_t &t)
 	}
 	else
 	{
-		path = absolute_path(t[1]);
+		for(int i = 1 ; i < t.size() ; i += 1)
+		{
+			if(t[i].size() > 1 && t[i][0] == '-')
+			{
+				if(t[i][1] == 'v')
+				{
+					show_values = true;
+				}
+			}
+			else
+			{
+				path = absolute_path(t[i]);
+				break;
+			}
+		}
 	}
-	node *n = root->at(path);
+	tree_node_t *n = root->at(path);
 	if(n == nullptr)
 	{
 		printf("\"%s\" does not exist\n", path.c_str());
 		return;
 	}
-	node::ls_list_t items = n->ls();
+	tree_node_t::ls_list_t items = n->ls();
 	printf("total: %d items\n", (int)items.size());
 	for(auto item : items)
 	{
-		printf("%s\n", item.c_str());
+		tree_node_t *nd = n->at(item);
+		printf("%s\t\t%s", item.c_str(), nd ? nd->get_type().c_str() : "");
+
+		if(show_values)
+		{
+			std::string err;
+			std::string value = render(nd, err);
+			if(err == "")
+			{
+				printf("\t\t'%s'", value.c_str());
+			}
+		}
+		printf("\n");
 	}
 }
 
-void cmd::lsprops(const tokens_t &t)
+void cmd::set(tree_node_t *n, std::string value)
 {
-	std::string path;
-
-	if(t.size() < 2)
-	{
-		path = current_node_path;
-	}
-	else
-	{
-		path = absolute_path(t[1]);
-	}
-	node *n = root->at(path);
-	if(n == nullptr)
-	{
-		printf("%s does not exist\n", path.c_str());
-		return;
-	}
-	node::props_t props = n->get_properties();
-	for(auto prop : props)
-	{
-		printf("%s %s\n", prop->get_type().c_str(), prop->get_name().c_str());
-	}
-}
-
-void cmd::set(node *n, std::string &prop, std::string value)
-{
-	property_base *p = n->get_property(prop);
+	property_base *p = dynamic_cast<property_base *>(n);
 	if(p == NULL)
 	{
-		printf("property %s does not exist\n", prop.c_str());
+		printf("Cant set node\n", n->get_name().c_str());
 		return;
 	}
 
-	setters_t::iterator it = setters.find(p->get_type());
-	if(it == setters.end())
+	types_t::iterator it = types.find(p->get_type());
+	if(it == types.end())
 	{
-		printf("dont know how to handle value of type %s\n", p->get_type().c_str());
+		printf("Dont know how to handle value of type %s\n", p->get_type().c_str());
 		return;
 	}
 	int res = it->second->set(p, value);
 	if(res != 0)
 	{
-		printf("error setting value\n");
+		printf("Error setting value\n");
 		return;
 	}
 
@@ -214,65 +249,34 @@ void cmd::set(node *n, std::string &prop, std::string value)
 
 void cmd::set(const std::string &target, const std::string &value)
 {
-	std::string::size_type dot_pos = target.find_last_of('.');
-	if(dot_pos == std::string::npos)
-	{
-		printf("property not specified\n");
-		return;
-	}
-	std::string path = target.substr(0, dot_pos);
-	std::string prop_name = target.substr(dot_pos + 1);
-
-	node *n = root->at(absolute_path(path));
+	tree_node_t *n = root->at(absolute_path(target));
 	if(n == nullptr)
 	{
-		printf("%s does not exist\n", path.c_str());
+		printf("%s does not exist\n", target.c_str());
 		return;
 	}
-	set(n, prop_name, value);
+	set(n, value);
 }
 
 void cmd::print(const std::string &target)
 {
-	std::string::size_type dot_pos = target.find_last_of('.');
-	if(dot_pos == std::string::npos)
-	{
-		printf("property not specified\n");
-		return;
-	}
-	std::string path = target.substr(0, dot_pos);
-	std::string prop = target.substr(dot_pos + 1);
-
-	node *n = root->at(absolute_path(path));
+	tree_node_t *n = root->at(absolute_path(target));
 	if(n == nullptr)
 	{
-		printf("%s does not exist\n", path.c_str());
+		printf("%s does not exist\n", target.c_str());
 		return;
 	}
 
-	property_base *p = n->get_property(prop);
-	if(p == NULL)
+	std::string err;
+	auto value = render(n, err);
+	if(err != "")
 	{
-		printf("property %s does not exist\n", prop.c_str());
-		return;
+		printf("%s\n", err.c_str());
 	}
-
-	getters_t::iterator it = getters.find(p->get_type());
-	if(it == getters.end())
+	else
 	{
-		printf("dont know how to handle value of type %s\n", p->get_type().c_str());
-		return;
+		printf("%s\n", value.c_str());
 	}
-	std::string value;
-	int res = it->second->get(p, value);
-	if(res != 0)
-	{
-		printf("error getting value\n");
-		return;
-	}
-	printf("%s = %s\n", target.c_str(), value.c_str());
-
-	//printf("print property %s has type %s\n", prop.c_str(), p->get_type().c_str());
 }
 
 void cmd::eval(const tokens_t &tok)
@@ -371,14 +375,14 @@ void cmd::help(const tokens_t &)
 	}
 }
 
-void cmd::mknode(const tokens_t &t)
+/*void cmd::mknode(const tokens_t &t)
 {
 	std::string status;
 	for(tokens_t::size_type i = 1 ; i < t.size() ; i += 1)
 	{
 		std::string path = absolute_path(t[i]);
 
-		node *n = root->at(path);
+		tree_node_t *n = root->at(path);
 
 		if(n != nullptr)
 		{
@@ -399,7 +403,7 @@ void cmd::mknode(const tokens_t &t)
 
 		printf("%s %s\n", path.c_str(), status.c_str());
 	}
-}
+}*/
 
 void cmd::rm(const tokens_t &t)
 {
@@ -408,7 +412,7 @@ void cmd::rm(const tokens_t &t)
 	{
 		std::string path = absolute_path(t[i]);
 
-		node *n = root->at(path);
+		tree_node_t *n = root->at(path);
 
 		if(n == nullptr)
 		{
@@ -424,22 +428,12 @@ void cmd::rm(const tokens_t &t)
 	}
 }
 
-void cmd::types(const tokens_t &/*t*/)
+void cmd::get_types(const tokens_t &/*t*/)
 {
-	printf("set:\n");
-	for(auto setter : setters)
+	printf("Available types are:\n");
+	for(auto type : types)
 	{
-		printf("\t%s\t%s\n", setter.first.c_str(), setter.second->get_typename().c_str());
-	}
-	printf("get:\n");
-	for(auto getter : getters)
-	{
-		printf("\t%s\t%s\n", getter.first.c_str(), getter.second->get_typename().c_str());
-	}
-	printf("generate:\n");
-	for(auto generator : generators)
-	{
-		printf("\t%s\t%s\n", generator.first.c_str(), generator.second->get_typename().c_str());
+		printf("\t%s\t%s\n", type.first.c_str(), type.second->get_typename().c_str());
 	}
 }
 
@@ -457,7 +451,7 @@ void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
 	}
 }
 
-void cmd::print_node(node *n, std::string prefix)
+void cmd::print_node(tree_node_t *n, std::string prefix)
 {
 	if(n == NULL)
 	{
@@ -469,11 +463,11 @@ void cmd::print_node(node *n, std::string prefix)
 	replace_if_at_end(prefix, "\u251c", "\u2502");
 	replace_if_at_end(prefix, "\u2514", " ");
 
-	node::ls_list_t children = n->ls();
+	tree_node_t::ls_list_t children = n->ls();
 
-	for(node::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
+	for(tree_node_t::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
 	{
-		node *child = n->at(children[i]);
+		tree_node_t *child = n->at(children[i]);
 
 		if(child == NULL)
 		{
@@ -491,7 +485,7 @@ void cmd::tree(const tokens_t &t)
 	{
 		path = absolute_path(t[1]);
 	}
-	node *n = root->at(path);
+	tree_node_t *n = root->at(path);
 	if(n == NULL)
 	{
 		printf("node does not exist\n");
@@ -505,7 +499,7 @@ int tab(int, int)
 	return 0;
 }
 
-void cmd::mkprop(const tokens_t &toks)
+/*void cmd::mkprop(const tokens_t &toks)
 {
 	if(toks.size() < 3)
 	{
@@ -524,7 +518,7 @@ void cmd::mkprop(const tokens_t &toks)
 
 	path = absolute_path(path);
 
-	node *n = root->at(path);
+	tree_node_t *n = root->at(path);
 	if(n == NULL)
 	{
 		printf("node %s does not exist\n", path.c_str());
@@ -550,4 +544,4 @@ void cmd::mkprop(const tokens_t &toks)
 	{
 		printf("error adding property\n");
 	}
-}
+}*/

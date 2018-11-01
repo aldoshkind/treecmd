@@ -13,47 +13,34 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "client.h"
-#include "observable.h"
-#include "reliable_serial.h"
-#include "socket_client.h"
-#include "socket_device.h"
+#include "tree_node.h"
 
-node root;
+#include <cxxabi.h>
 
-int main(int argc, char **argv)
+std::string demangle(const char *name)
 {
-	std::string host = "127.0.0.1";
-	int port = 13233;
-	std::string port_str = "13233";
-	if(argc > 1)
+	int status = 0;
+	return abi::__cxa_demangle(name, 0, 0, &status);
+}
+
+template <class T>
+class tree_node_inherited : public tree_node_t, public T
+{
+public:
+	tree_node_inherited() : tree_node_t(), T()
 	{
-		host = std::string(argv[1]);
+		tree_node_t::set_type(demangle(typeid(T).name()));
 	}
-	if(argc > 2)
-	{
-		port_str = std::string(argv[2]);
-	}
+};
 
-	int rd_port = strtol(port_str.c_str(), NULL, 10);
-	if(rd_port > 0 && rd_port < 65535)
-	{
-		port = rd_port;
-	}
+int main()
+{
+	tree_node_t root;
 
-	socket_client sc;
-	connector conn;
-	conn.set_listener(&sc);
-	conn.connect(host, port);
-	socket_device sd(&sc);
-
-	client cl;
-	cl.set_device(&sd);
-	sd.set_listener(&cl);
-
-	boost::erase_all(host, ".");
-
-	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
+	tree_node_t a;
+	root.attach("a", &a, false);
+	auto tnid = new tree_node_inherited<property_value<double>>;
+	root.attach("b", tnid);
 
 	treecmd::cmd c(&root);
 	c.run();
