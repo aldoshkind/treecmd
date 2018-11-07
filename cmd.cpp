@@ -9,9 +9,9 @@ using namespace treecmd;
 
 int tab(int, int);
 
-class tree_node_t;
+class tree_node;
 
-cmd::cmd(tree_node_t *root)
+cmd::cmd(tree_node *root)
 {
 	this->root = root;
 
@@ -123,7 +123,7 @@ void cmd::cd(const tokens_t &t)
 	else
 	{
 		std::string path = absolute_path(t[1]);
-		tree_node_t *n = root->at(path);
+		tree_node *n = root->at(path);
 		if(n != nullptr)
 		{
 			current_node_path = path;
@@ -135,7 +135,7 @@ void cmd::cd(const tokens_t &t)
 	}
 }
 
-std::string cmd::render(tree_node_t *n, std::string &error)
+std::string cmd::render(tree_node *n, std::string &error)
 {
 	if(n == nullptr)
 	{
@@ -196,17 +196,17 @@ void cmd::ls(const tokens_t &t)
 			}
 		}
 	}
-	tree_node_t *n = root->at(path);
+	tree_node *n = root->at(path);
 	if(n == nullptr)
 	{
 		printf("\"%s\" does not exist\n", path.c_str());
 		return;
 	}
-	tree_node_t::ls_list_t items = n->ls();
+	tree_node::ls_list_t items = n->ls();
 	printf("total: %d items\n", (int)items.size());
 	for(auto item : items)
 	{
-		tree_node_t *nd = n->at(item);
+		tree_node *nd = n->at(item);
 		printf("%s\t\t%s", item.c_str(), nd ? nd->get_type().c_str() : "");
 
 		if(show_values)
@@ -222,7 +222,7 @@ void cmd::ls(const tokens_t &t)
 	}
 }
 
-void cmd::set(tree_node_t *n, std::string value)
+void cmd::set(tree_node *n, std::string value)
 {
 	property_base *p = dynamic_cast<property_base *>(n);
 	if(p == NULL)
@@ -249,7 +249,7 @@ void cmd::set(tree_node_t *n, std::string value)
 
 void cmd::set(const std::string &target, const std::string &value)
 {
-	tree_node_t *n = root->at(absolute_path(target));
+	tree_node *n = root->at(absolute_path(target));
 	if(n == nullptr)
 	{
 		printf("%s does not exist\n", target.c_str());
@@ -260,7 +260,7 @@ void cmd::set(const std::string &target, const std::string &value)
 
 void cmd::print(const std::string &target)
 {
-	tree_node_t *n = root->at(absolute_path(target));
+	tree_node *n = root->at(absolute_path(target));
 	if(n == nullptr)
 	{
 		printf("%s does not exist\n", target.c_str());
@@ -412,7 +412,7 @@ void cmd::rm(const tokens_t &t)
 	{
 		std::string path = absolute_path(t[i]);
 
-		tree_node_t *n = root->at(path);
+		tree_node *n = root->at(path);
 
 		if(n == nullptr)
 		{
@@ -451,7 +451,7 @@ void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
 	}
 }
 
-void cmd::print_node(tree_node_t *n, std::string prefix)
+void cmd::print_node(tree_node *n, std::string prefix)
 {
 	if(n == NULL)
 	{
@@ -463,11 +463,11 @@ void cmd::print_node(tree_node_t *n, std::string prefix)
 	replace_if_at_end(prefix, "\u251c", "\u2502");
 	replace_if_at_end(prefix, "\u2514", " ");
 
-	tree_node_t::ls_list_t children = n->ls();
+	tree_node::ls_list_t children = n->ls();
 
-	for(tree_node_t::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
+	for(tree_node::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
 	{
-		tree_node_t *child = n->at(children[i]);
+		tree_node *child = n->at(children[i]);
 
 		if(child == NULL)
 		{
@@ -485,7 +485,7 @@ void cmd::tree(const tokens_t &t)
 	{
 		path = absolute_path(t[1]);
 	}
-	tree_node_t *n = root->at(path);
+	tree_node *n = root->at(path);
 	if(n == NULL)
 	{
 		printf("node does not exist\n");

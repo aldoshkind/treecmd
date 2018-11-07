@@ -14,7 +14,7 @@ namespace treecmd
 
 class cmd
 {
-	tree_node_t *root;
+	tree_node *root;
 
 	typedef std::vector<std::string> tokens_t;
 	typedef boost::function<void(const tokens_t &)> command_t;
@@ -29,12 +29,12 @@ class cmd
 	std::string current_node_path = "/";
 
 	void replace_if_at_end(std::string &str, char *pattern, char *replacement);
-	void print_node(tree_node_t *n, std::string prefix = "");
+	void print_node(tree_node *n, std::string prefix = "");
 
 	void add_type(type *t);
 
 public:
-	/*constructor*/ cmd(tree_node_t *root);
+	/*constructor*/ cmd(tree_node *root);
 	/*destructor*/ ~cmd();
 
 	void init();
@@ -52,12 +52,12 @@ public:
 	void rm(const tokens_t &);
 	void get_types(const tokens_t &);
 	void help(const tokens_t &);
-	std::string render(tree_node_t *n, std::string &error);
+	std::string render(tree_node *n, std::string &error);
 
 	cmd::tokens_t tokenize(const std::string &str);
 	void exec(const tokens_t &cmd);
 
-	void set(tree_node_t *n, std::string value);
+	void set(tree_node *n, std::string value);
 	void set(const std::string &target, const std::string &value);
 
 	void print(const std::string &target);
