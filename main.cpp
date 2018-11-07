@@ -13,7 +13,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "tree_node_inherited.h".h"
+#include "tree_node_inherited.h"
 
 int main()
 {
