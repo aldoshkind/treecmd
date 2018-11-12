@@ -191,11 +191,12 @@ void cmd::ls(const tokens_t &t)
 			}
 			else
 			{
-				path = absolute_path(t[i]);
+				path = t[i];
 				break;
 			}
 		}
 	}
+	path = absolute_path(path);
 	tree_node *n = root->at(path);
 	if(n == nullptr)
 	{
