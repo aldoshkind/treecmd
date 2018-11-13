@@ -21,7 +21,9 @@
 
 int main(int argc, char **argv)
 {
-	std::string host = "127.0.0.1";
+	tree_node root;
+
+	/*std::string host = "127.0.0.1";
 	int port = 13233;
 	std::string port_str = std::to_string(port);
 	if(argc > 1)
@@ -39,8 +41,6 @@ int main(int argc, char **argv)
 		port = rd_port;
 	}
 
-	tree_node root;
-
 
 	socket_client sc;
 	connector conn;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 //	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
 
-	root.attach("remote", cl.get_root(), false);
+	root.attach("remote", cl.get_root(), false);*/
 
 	tree_node a;
 	root.attach("a", &a, false);

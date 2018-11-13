@@ -15,14 +15,14 @@ SOURCES += main.cpp \
     ../treeipc/client_node.cpp \
     ../treeipc/io_service.cpp \
     ../treeipc/package.cpp \
-    ../treeipc/socket_client.cpp
+    ../treeipc/socket_client.cpp \
+    ../tree/tree_node_inherited.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
 HEADERS += \
     cmd.h \
     typeidable.h \
-    ../tree/cnode.h \
     ../tree/filepath_utils.h \
     ../tree/property_listener.h \
     ../tree/resource.h \

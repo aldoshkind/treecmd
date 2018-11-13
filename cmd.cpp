@@ -30,7 +30,7 @@ void cmd::init()
 	commands["help"] = boost::bind(&cmd::help, this, _1);
 	commands["pwd"] = boost::bind(&cmd::pwd, this, _1);
 	commands["cd"] = boost::bind(&cmd::cd, this, _1);
-	//commands["mk"] = boost::bind(&cmd::mknode, this, _1);
+	commands["mk"] = boost::bind(&cmd::mknode, this, _1);
 	commands["ls"] = boost::bind(&cmd::ls, this, _1);
 	commands["rm"] = boost::bind(&cmd::rm, this, _1);
 	commands["types"] = boost::bind(&cmd::get_types, this, _1);
@@ -376,23 +376,54 @@ void cmd::help(const tokens_t &)
 	}
 }
 
-/*void cmd::mknode(const tokens_t &t)
+void cmd::mknode(const tokens_t &t)
 {
+	if(t.size() < 2)
+	{
+		printf("usage: %s (type) name\n(type) is optional. type types to get types\n", t[0].c_str());
+		return;
+	}
+
+	std::string type = "";
+
+	size_t lbrace_pos = t[1].find_last_of('(');
+	size_t rbrace_pos = t[1].find_first_of(')');
+	bool t1_is_type = false;
+	if(lbrace_pos != std::string::npos && rbrace_pos != std::string::npos && lbrace_pos < rbrace_pos)
+	{
+		type = t[1].substr(lbrace_pos + 1, rbrace_pos - lbrace_pos - 1);
+		t1_is_type = true;
+	}
+
+
 	std::string status;
-	for(tokens_t::size_type i = 1 ; i < t.size() ; i += 1)
+	for(tokens_t::size_type i = t1_is_type ? 2 : 1 ; i < t.size() ; i += 1)
 	{
 		std::string path = absolute_path(t[i]);
 
-		tree_node_t *n = root->at(path);
+		size_t last_slash = path.find_last_of('/');
+		std::string catalog = path.substr(0, last_slash == std::string::npos ? 0 : last_slash);
+		std::string node_name = path.substr(last_slash == std::string::npos ? 0 : last_slash);
 
-		if(n != nullptr)
+		tree_node *n = root->at(catalog);
+
+		if(n == nullptr)
 		{
-			status = "exists";
+			status = "Error resolving path " + catalog;
 		}
 		else
 		{
-			n = root->generate(path);
-			if(n != nullptr)
+			tree_node *new_node = nullptr;
+			if(type == "")
+			{
+				new_node = new tree_node();
+			}
+			else
+			{
+				new_node = generate(type);
+			}
+
+			if(new_node != nullptr)
 			{
 				status = "created";
 			}
@@ -400,11 +431,18 @@ void cmd::help(const tokens_t &)
 			{
 				status = "creation failed";
 			}
+
+			if(n->at(node_name))
+			{
+				status = "existst";
+			}
+
+			n->attach(node_name, new_node);
 		}
 
 		printf("%s %s\n", path.c_str(), status.c_str());
 	}
-}*/
+}
 
 void cmd::rm(const tokens_t &t)
 {
@@ -500,49 +538,13 @@ int tab(int, int)
 	return 0;
 }
 
-/*void cmd::mkprop(const tokens_t &toks)
+tree_node *cmd::generate(const std::string &type)
 {
-	if(toks.size() < 3)
+	auto t = types.find(type);
+	if(t == types.end())
 	{
-		printf("usage: %s name type\n", toks[0].c_str());
-		return;
+		return nullptr;
 	}
 
-	std::string::size_type dot_pos = toks[1].find_last_of('.');
-	if(dot_pos == std::string::npos)
-	{
-		printf("property not specified\n");
-		return;
-	}
-	std::string path = toks[1].substr(0, dot_pos);
-	std::string prop_name = toks[1].substr(dot_pos + 1);
-
-	path = absolute_path(path);
-
-	tree_node_t *n = root->at(path);
-	if(n == NULL)
-	{
-		printf("node %s does not exist\n", path.c_str());
-		return;
-	}
-
-	std::string type = toks[2];
-	generators_t::iterator it = generators.find(type);
-	if(it == generators.end())
-	{
-		printf("unkown type %s\n", type.c_str());
-		return;
-	}
-
-	property_base *p = it->second->generate(prop_name);
-	if(p == NULL)
-	{
-		printf("error allocating property\n", path.c_str());
-		return;
-	}
-	property_base *pa = n->add_property(p);
-	if(pa == NULL)
-	{
-		printf("error adding property\n");
-	}
-}*/
+	return t->second->generate();;
+}

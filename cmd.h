@@ -33,6 +33,8 @@ class cmd
 
 	void add_type(type *t);
 
+	tree_node *generate(const std::string &type);
+
 public:
 	/*constructor*/ cmd(tree_node *root);
 	/*destructor*/ ~cmd();
@@ -47,8 +49,7 @@ public:
 	void cd(const tokens_t &);
 	void ls(const tokens_t &);
 	void tree(const tokens_t &);
-	//void mknode(const tokens_t &);
-	//void mkprop(const tokens_t &);
+	void mknode(const tokens_t &);
 	void rm(const tokens_t &);
 	void get_types(const tokens_t &);
 	void help(const tokens_t &);

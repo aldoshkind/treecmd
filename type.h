@@ -9,6 +9,7 @@
 #include <QString>
 
 #include <resource.h>
+#include "tree_node_inherited.h"
 #include "typeidable.h"
 
 namespace treecmd
@@ -22,7 +23,7 @@ public:
 
 	virtual int set(property_base *, const std::string &) = 0;
 	virtual int get(property_base *, std::string &) = 0;
-	//virtual property_base *generate(const std::string &name) = 0;
+	virtual tree_node *generate() = 0;
 };
 
 class type_qstring : public type
@@ -59,11 +60,11 @@ public:
 		return 0;
 	}
 
-	/*property_base *generate(const std::string &name)
+	tree_node *generate()
 	{
-		property_base *pd = new property_value<QString>(name);
+		auto *pd = new tree_node_inherited<property_value<QString>>();
 		return pd;
-	}*/
+	}
 
 	const std::string get_typeid() const
 	{
@@ -88,7 +89,7 @@ public:
 
 	int set(property_base *prop, const std::string & value);
 	int get(property_base *prop, std::string &value);
-//	property_base *generate(const std::string &name);
+	tree_node *generate();
 
 	const std::string get_typeid() const;
 	const std::string get_typename() const;
@@ -128,12 +129,12 @@ int type_numeric<T>::get(property_base *prop, std::string &value)
 	return 0;
 }
 
-/*template <typename type>
-property_base *type_numeric<type>::generate(const std::string &name)
+template <typename T>
+tree_node *type_numeric<T>::generate()
 {
-	property_base *pd = new property_value<type>(name);
+	auto *pd = new tree_node_inherited<property_value<T>>();
 	return pd;
-}*/
+}
 
 template <typename T>
 const std::string type_numeric<T>::get_typeid() const
