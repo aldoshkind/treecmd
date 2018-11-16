@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 {
 	tree_node root;
 
-	/*std::string host = "127.0.0.1";
+	std::string host = "127.0.0.1";
 	int port = 13233;
 	std::string port_str = std::to_string(port);
 	if(argc > 1)
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 	conn.connect(host, port);
 	socket_device sd(&sc);
 
-	client cl;
+	treeipc::client cl;
 	cl.set_device(&sd);
 	sd.set_listener(&cl);
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 //	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
 
-	root.attach("remote", cl.get_root(), false);*/
+	root.attach("remote", cl.get_root(), false);
 
 	tree_node a;
 	root.attach("a", &a, false);

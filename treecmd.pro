@@ -16,7 +16,10 @@ SOURCES += main.cpp \
     ../treeipc/io_service.cpp \
     ../treeipc/package.cpp \
     ../treeipc/socket_client.cpp \
-    ../tree/tree_node_inherited.cpp
+    ../tree/tree_node_inherited.cpp \
+    ../treeipc/property_fake.cpp \
+    ../treeipc/proxy_node_generator.cpp \
+    ../treeipc/node_sync.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
@@ -39,4 +42,5 @@ HEADERS += \
     ../treeipc/pseudodevice.h \
     ../treeipc/reliable_serial.h \
     ../treeipc/socket_client.h \
-    ../treeipc/socket_device.h
+    ../treeipc/socket_device.h \
+    ../treeipc/property_fake.h

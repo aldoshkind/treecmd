@@ -403,7 +403,7 @@ void cmd::mknode(const tokens_t &t)
 
 		size_t last_slash = path.find_last_of('/');
 		std::string catalog = path.substr(0, last_slash == std::string::npos ? 0 : last_slash);
-		std::string node_name = path.substr(last_slash == std::string::npos ? 0 : last_slash);
+		std::string node_name = path.substr(last_slash == std::string::npos ? 0 : last_slash + 1);
 
 		tree_node *n = root->at(catalog);
 
