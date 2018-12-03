@@ -8,8 +8,8 @@
 
 #include <QString>
 
-#include <resource.h>
-#include "tree_node_inherited.h"
+#include <tree/resource.h>
+#include "tree/tree_node_inherited.h"
 #include "typeidable.h"
 
 namespace treecmd

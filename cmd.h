@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "tree_node.h"
+#include "tree/tree_node.h"
 #include <boost/function.hpp>
 
 #include "type.h"

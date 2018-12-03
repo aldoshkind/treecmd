@@ -228,7 +228,7 @@ void cmd::set(tree_node *n, std::string value)
 	property_base *p = dynamic_cast<property_base *>(n);
 	if(p == NULL)
 	{
-		printf("Cant set node\n", n->get_name().c_str());
+		printf("Cant set node %s\n", n->get_name().c_str());
 		return;
 	}
 

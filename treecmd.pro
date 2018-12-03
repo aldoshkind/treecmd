@@ -39,8 +39,8 @@ HEADERS += \
     ../treeipc/observable.h \
     ../treeipc/package.h \
     ../treeipc/property_serializer.h \
-    ../treeipc/pseudodevice.h \
     ../treeipc/reliable_serial.h \
     ../treeipc/socket_client.h \
     ../treeipc/socket_device.h \
-    ../treeipc/property_fake.h
+    ../treeipc/property_fake.h \
+    ../treeipc/locking_queue.h
