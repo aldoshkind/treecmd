@@ -26,6 +26,67 @@ public:
 	virtual tree_node *generate() = 0;
 };
 
+
+class type_bool : public type
+{
+public:
+	/*constructor*/ type_bool(){}
+	/*destructor*/ ~type_bool(){}
+
+	int set(property_base *prop, const std::string &value)
+	{
+		property<bool> *pd = dynamic_cast<property<bool> *>(prop);
+
+		if(pd == NULL)
+		{
+			return -1;
+		}
+		
+		bool ok = false;
+		int int_val = QString::fromStdString(value).toInt(&ok, 10);
+		
+		bool val = value == "true" ? true : value == "false" ? false : (ok == true && int_val != 0) ? true : false;
+
+		pd->set_value(val);
+
+		return 0;
+	}
+
+	int get(property_base *prop, std::string &value)
+	{
+		property<bool> *pd = dynamic_cast<property<bool> *>(prop);
+
+		if(pd == NULL)
+		{
+			return -1;
+		}
+
+		value = pd->get_value() ? "true" : "false";
+
+		return 0;
+	}
+
+	tree_node *generate()
+	{
+		auto *pd = new tree_node_inherited<property_value<bool>>();
+		return pd;
+	}
+
+	const std::string get_typeid() const
+	{
+		return typeid(bool).name();
+	}
+	const std::string get_typename() const
+	{
+		int status = 0;
+		char *n = abi::__cxa_demangle(get_typeid().c_str(), 0, 0, &status);
+		std::string name(n);
+		free(n);
+		return name;
+	}
+};
+
+
 class type_qstring : public type
 {
 public:

@@ -40,6 +40,7 @@ void cmd::init()
 	add_type(new type_numeric<float>());
 	add_type(new type_numeric<int>());
 	add_type(new type_numeric<long>());
+	add_type(new type_bool());
 	add_type(new type_qstring());
 }
 
@@ -54,7 +55,7 @@ void cmd::run()
 {
 	current_node_path = "/";
 
-	char *input, shell_prompt[] = " > ";
+	char *input = nullptr, shell_prompt[] = " > ";
 	rl_bind_key('\t', tab);
 	rl_bind_keyseq ("\\C-c", tab);		// doesnt work at the moment
 
