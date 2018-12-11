@@ -16,6 +16,7 @@
 #include "tree_node_inherited.h"
 
 #include "../treeipc/client.h"
+#include "../treeipc/client_nonroot.h".h"
 #include "../treeipc/socket_client.h"
 #include "../treeipc/socket_device.h"
 
@@ -47,16 +48,12 @@ int main(int argc, char **argv)
 	conn.set_listener(&sc);
 	conn.connect(host, port);
 	socket_device sd(&sc);
-
-	treeipc::client cl;
+	
+	treeipc::client_nonroot cl;
 	cl.set_device(&sd);
 	sd.set_listener(&cl);
-
-	boost::erase_all(host, ".");
-
-//	root.attach(std::string("/") + host + ":" + port_str, cl.get_root(), false);
-
-	root.attach("remote", cl.get_root(), false);
+	
+	cl.set_root(&root);
 
 	tree_node a;
 	root.attach("a", &a, false);
