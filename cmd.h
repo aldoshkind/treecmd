@@ -68,6 +68,8 @@ public:
 
 	void print(const std::string &target);
 	void eval(const tokens_t &tok);
+	
+	tree_node::ls_list_t ls_for(const std::string &s);
 };
 
 }
