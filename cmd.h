@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "tree/tree_node.h"
 #include <boost/function.hpp>
@@ -27,6 +28,8 @@ class cmd
 	types_t types;
 
 	std::string current_node_path = "/";
+	
+	std::thread cmd_thread;
 
 	void replace_if_at_end(std::string &str, char *pattern, char *replacement);
 	void print_node(tree_node *n, std::string prefix = "");
@@ -41,6 +44,8 @@ public:
 
 	void init();
 	void run();
+	
+	void run_in_thread();
 
 	std::string absolute_path(std::string p);
 

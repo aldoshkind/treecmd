@@ -1,5 +1,7 @@
 #include "cmd.h"
 
+#include <functional>
+
 #include <boost/bind.hpp>
 
 #include <readline/readline.h>
@@ -11,6 +13,8 @@ int tab(int, int);
 
 class tree_node;
 
+bool cmd_thread_running = true;
+
 cmd::cmd(tree_node *root)
 {
 	this->root = root;
@@ -20,7 +24,8 @@ cmd::cmd(tree_node *root)
 
 cmd::~cmd()
 {
-	//
+	cmd_thread_running = false;
+	cmd_thread.join();
 }
 
 
@@ -51,6 +56,15 @@ void cmd::add_type(type *t)
 	types[tp] = t;
 }
 
+int hook_func()
+{
+	if(cmd_thread_running == false)
+	{
+		rl_done = 1;
+	}
+	return 0;
+}
+
 void cmd::run()
 {
 	current_node_path = "/";
@@ -58,12 +72,13 @@ void cmd::run()
 	char *input = nullptr, shell_prompt[] = " > ";
 	rl_bind_key('\t', tab);
 	rl_bind_keyseq ("\\C-c", tab);		// doesnt work at the moment
+	rl_event_hook = hook_func;
 
-	for( ; ; )
+	for( ; cmd_thread_running ; )
 	{
 		input = readline((current_node_path + shell_prompt).c_str());
 
-		if(input == NULL)
+		if(input == NULL || cmd_thread_running == false)
 		{
 			break;
 		}
@@ -548,4 +563,10 @@ tree_node *cmd::generate(const std::string &type)
 	}
 
 	return t->second->generate();;
+}
+
+void cmd::run_in_thread()
+{
+	cmd_thread_running = true;
+	cmd_thread = std::thread(std::bind(&cmd::run, this));
 }
