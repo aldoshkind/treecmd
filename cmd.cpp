@@ -76,7 +76,7 @@ char *character_name_generator(const char *text, int state)
 	static int list_index = 0, len = 0;
 	if(state == 0)
 	{
-	        list_index = 0;
+		list_index = 0;
 		len	= strlen(text);
 	}
 
@@ -86,13 +86,19 @@ char *character_name_generator(const char *text, int state)
 	}
 
 	auto children = current_cmd->ls_for(text);
+	
+	std::string tx(text);
+	std::string::size_type last_slash_pos = tx.find_last_of('/');
+	std::string prefix = (last_slash_pos == std::string::npos) ? "" : tx.substr(0, last_slash_pos);
 
 	while(list_index < children.size())
 	{
 		std::string name = children[list_index++];
-		if (strncmp(name.c_str(), text, len) == 0)
+		std::string suffix = (prefix.size() > 0) ? "/" : "";
+		std::string opt = prefix + suffix + name;
+		if((strncmp(opt.c_str(), text, len) == 0) || text[strlen(text) - 1] == '/')
 		{
-			return strdup(name.c_str());
+			return strdup(opt.c_str());
 		}
 	}
 
@@ -102,6 +108,8 @@ char *character_name_generator(const char *text, int state)
 char **character_name_completion(const char *text, int start, int end)
 {
     rl_attempted_completion_over = 1;
+	rl_filename_completion_desired = 1;
+	rl_completion_suppress_append = 1;
     return rl_completion_matches(text, character_name_generator);
 }
 
@@ -609,22 +617,36 @@ void cmd::run_in_thread()
 tree_node::ls_list_t cmd::ls_for(const std::string &text)
 {
 	std::string s = absolute_path(text);
-	if(text.size() == 0 && s.back() != '/')
+	tree_node *n = root->get(s, false);
+	if(n != nullptr)
 	{
-		s += '/';
+		tree_node::ls_list_t children = n->ls();
+		for(auto &child : children)
+		{
+			tree_node *ch = n->at(child);
+			if(ch != nullptr && ch->ls().size() != 0)
+			{
+				child += "/";
+			}
+		}
+		return children;
 	}
 	std::string::size_type end = s.find_last_of('/');
 	end = (end != (std::string::npos)) ? end + 1 : end;
 	s = s.substr(0, end);
-	
-	tree_node *n = root->at(s);
-	
-	tree_node::ls_list_t children;
-	
+	n = root->get(s, false);
 	if(n != nullptr)
 	{
-		children = n->ls();
+		tree_node::ls_list_t children = n->ls();
+		for(auto &child : children)
+		{
+			tree_node *ch = n->at(child);
+			if(ch != nullptr && ch->ls().size() != 0)
+			{
+				child += "/";
+			}
+		}
+		return children;
 	}
-	
-	return children;
+	return tree_node::ls_list_t();
 }
