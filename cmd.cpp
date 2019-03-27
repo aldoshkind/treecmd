@@ -69,11 +69,9 @@ int hook_func()
 	return 0;
 }
 
-char *character_names[] = {"a", "ab", "ac"};
-
 char *character_name_generator(const char *text, int state)
 {
-	static int list_index = 0, len = 0;
+	static unsigned int list_index = 0, len = 0;
 	if(state == 0)
 	{
 		list_index = 0;
@@ -105,7 +103,7 @@ char *character_name_generator(const char *text, int state)
 	return NULL;
 }
 
-char **character_name_completion(const char *text, int start, int end)
+char **character_name_completion(const char *text, int /*start*/, int /*end*/)
 {
     rl_attempted_completion_over = 1;
 	rl_filename_completion_desired = 1;
@@ -244,7 +242,7 @@ void cmd::ls(const tokens_t &t)
 	}
 	else
 	{
-		for(int i = 1 ; i < t.size() ; i += 1)
+		for(tokens_t::size_type i = 1 ; i < t.size() ; i += 1)
 		{
 			if(t[i].size() > 1 && t[i][0] == '-')
 			{
