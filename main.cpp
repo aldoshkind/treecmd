@@ -16,7 +16,7 @@
 #include "tree_node_inherited.h"
 
 #include "../treeipc/client.h"
-#include "../treeipc/client_nonroot.h".h"
+#include "../treeipc/client_nonroot.h"
 #include "../treeipc/socket_client.h"
 #include "../treeipc/socket_device.h"
 
