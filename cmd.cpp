@@ -32,7 +32,6 @@ cmd::~cmd()
 	cmd_thread.join();
 }
 
-
 void cmd::init()
 {
 	commands["exit"] = boost::bind(&cmd::exit_cmd, this, _1);
@@ -41,6 +40,8 @@ void cmd::init()
 	commands["cd"] = boost::bind(&cmd::cd, this, _1);
 	commands["mk"] = boost::bind(&cmd::mknode, this, _1);
 	commands["ls"] = boost::bind(&cmd::ls, this, _1);
+	commands["ln"] = boost::bind(&cmd::ln, this, _1);
+	commands["mv"] = boost::bind(&cmd::mv, this, _1);
 	commands["rm"] = boost::bind(&cmd::rm, this, _1);
 	commands["types"] = boost::bind(&cmd::get_types, this, _1);
 	commands["tree"] = boost::bind(&cmd::tree, this, _1);
@@ -229,6 +230,129 @@ std::string cmd::render(tree_node *n, std::string &error)
 	}
 
 	return value;
+}
+
+void cmd::ln(const tokens_t &t)
+{
+	if(t.size() < 3)
+	{
+		printf("usage: ln from to");
+		return;
+	}
+	
+	std::string path_src = absolute_path(t[1]);
+	std::string path_dst = absolute_path(t[2]);
+
+	tree_node *from = root->at(path_src);
+
+	std::string status;
+	if(from == nullptr)
+	{
+		status = path_src + " doesn't exist";
+	}
+	else
+	{
+		std::string parent_path, node_name;
+		if(t[2].back() == '/')
+		{
+			parent_path = path_dst;
+			std::string src_path_unused;
+			extract_last_level_name(path_src, src_path_unused, node_name);
+		}
+		else
+		{
+			tree_node *to = root->at(path_dst);
+			if(to != nullptr)
+			{
+				status = path_dst + " exists";
+			}
+			else
+			{
+				extract_last_level_name(path_dst, parent_path, node_name);
+			}
+		}
+		if(status == "")
+		{
+			tree_node *parent = root->at(parent_path);
+			if(parent == nullptr)
+			{
+				status = parent_path + "does not exist";
+			}
+			else
+			{
+				parent->attach(node_name, from, false);
+				status = "link created";
+			}
+		}
+	}
+
+	printf("%s\n", status.c_str());
+}
+
+void cmd::mv(const tokens_t &t)
+{
+	if(t.size() < 3)
+	{
+		printf("usage: mv from to");
+		return;
+	}
+	
+	std::string path_src = absolute_path(t[1]);
+	std::string path_dst = absolute_path(t[2]);
+
+	tree_node *from = root->at(path_src);
+
+	if(from == nullptr)
+	{
+		print_status(path_src + " doesn't exist");
+		return;
+	}
+	else
+	{
+		std::string parent_path, node_name;
+		if(t[2].back() == '/')
+		{
+			parent_path = path_dst;
+			std::string src_path_unused;
+			extract_last_level_name(path_src, src_path_unused, node_name);
+		}
+		else
+		{
+			extract_last_level_name(path_dst, parent_path, node_name);
+		}
+		
+		tree_node *parent = root->at(parent_path);
+		if(parent == nullptr)
+		{
+			print_status(parent_path + " does not exist");
+			return;
+		}
+		
+		if(parent->at(node_name) != nullptr)
+		{
+			print_status(path_dst + " exists");
+			return;
+		}
+		
+		if(parent->find(from) != nullptr)
+		{
+			print_status("source and destination are the same");
+			return;
+		}
+		
+		from = ((tree_node *)from->get_parent())->detach(from);
+		
+		if(from == nullptr)
+		{
+			print_status("error detaching " + path_src);
+			return;
+		}
+		else
+		{
+			parent->attach(node_name, from, false);
+			print_status("node moved");
+		}
+	}
 }
 
 void cmd::ls(const tokens_t &t)
@@ -647,4 +771,9 @@ tree_node::ls_list_t cmd::ls_for(const std::string &text)
 		return children;
 	}
 	return tree_node::ls_list_t();
+}
+
+void cmd::print_status(const std::string &s)
+{
+	printf("%s\n", s.c_str());
 }

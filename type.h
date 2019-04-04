@@ -8,7 +8,7 @@
 
 #include <QString>
 
-#include <tree/resource.h>
+#include <tree/property.h>
 #include "tree/tree_node_inherited.h"
 #include "typeidable.h"
 

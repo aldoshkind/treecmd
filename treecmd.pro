@@ -9,7 +9,6 @@ SOURCES += main.cpp \
     cmd.cpp \
     ../tree/filepath_utils.cpp \
     ../tree/property_listener.cpp \
-    ../tree/resource.cpp \
     ../tree/tree_node.cpp \
     ../treeipc/client.cpp \
     ../treeipc/client_node.cpp \
@@ -29,7 +28,6 @@ HEADERS += \
     typeidable.h \
     ../tree/filepath_utils.h \
     ../tree/property_listener.h \
-    ../tree/resource.h \
     ../tree/tree_node.h \
     type.h \
     ../treeipc/client.h \
@@ -45,4 +43,5 @@ HEADERS += \
     ../treeipc/socket_device.h \
     ../treeipc/property_fake.h \
     ../treeipc/locking_queue.h \
-    ../treeipc/client_nonroot.h
+    ../treeipc/client_nonroot.h \
+    ../tree/property.h

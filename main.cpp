@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	tree_node root;
 
-	std::string host = "127.0.0.1";
+	/*std::string host = "127.0.0.1";
 	int port = 13233;
 	std::string port_str = std::to_string(port);
 	if(argc > 1)
@@ -53,12 +53,14 @@ int main(int argc, char **argv)
 	cl.set_device(&sd);
 	sd.set_listener(&cl);
 	
-	cl.set_root(&root);
+	cl.set_root(&root);*/
 
 	tree_node a;
 	root.attach("a", &a, false);
 	auto tnid = new tree_node_inherited<property_value<double>>;
 	root.attach("b", tnid);
+	
+	a.attach("b", tnid, false);
 
 	treecmd::cmd c(&root);
 	c.run();
