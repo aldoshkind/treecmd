@@ -131,6 +131,7 @@ void cmd::run()
 		}
 
 		tokens_t ts = tokenize(input);
+		raw_input = input;
 		exec(ts);
 
 		if(strlen(input) != 0)
@@ -540,7 +541,14 @@ void cmd::exec(const tokens_t &cmd)
 	commands_t::iterator it = commands.find(cmd[0]);
 	if(it == commands.end())
 	{
-		eval(cmd);
+		if(inter == nullptr)
+		{
+			eval(cmd);
+		}
+		else
+		{
+			inter->evaluate(raw_input);
+		}
 	}
 	else
 	{
@@ -776,4 +784,9 @@ tree_node::ls_list_t cmd::ls_for(const std::string &text)
 void cmd::print_status(const std::string &s)
 {
 	printf("%s\n", s.c_str());
+}
+
+void cmd::set_interpreter(interpreter *in)
+{
+	inter = in;
 }

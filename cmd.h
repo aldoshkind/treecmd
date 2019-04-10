@@ -13,9 +13,18 @@
 namespace treecmd
 {
 
+class interpreter
+{
+public:
+	virtual ~interpreter(){}
+	virtual void evaluate(std::string) = 0;
+};
+
 class cmd
 {
 	tree_node *root;
+
+	interpreter *inter = nullptr;
 
 	typedef std::vector<std::string> tokens_t;
 	typedef boost::function<void(const tokens_t &)> command_t;
@@ -38,6 +47,8 @@ class cmd
 
 	tree_node *generate(const std::string &type);
 	void print_status(const std::string &status);
+
+	std::string raw_input;
 
 public:
 	/*constructor*/ cmd(tree_node *root);
@@ -71,6 +82,8 @@ public:
 
 	void print(const std::string &target);
 	void eval(const tokens_t &tok);
+
+	void set_interpreter(interpreter *in);
 	
 	tree_node::ls_list_t ls_for(const std::string &s);
 };
