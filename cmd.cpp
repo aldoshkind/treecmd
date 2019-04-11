@@ -50,6 +50,7 @@ void cmd::init()
 	add_type(new type_numeric<float>());
 	add_type(new type_numeric<int>());
 	add_type(new type_numeric<long>());
+	add_type(new type_numeric<long long>());
 	add_type(new type_bool());
 	add_type(new type_qstring());
 }
@@ -217,8 +218,7 @@ std::string cmd::render(tree_node *n, std::string &error)
 	types_t::iterator it = types.find(p->get_type());
 	if(it == types.end())
 	{
-		//printf("Dont know how to handle value of type '%s'\n", p->get_type().c_str());
-		error = "Dont know how to handle value";
+		error = "dont know how to handle value of type '" + p->get_type() + "'";
 		return "";
 	}
 	std::string value;
@@ -455,6 +455,16 @@ void cmd::print(const std::string &target)
 		return;
 	}
 
+	print(n);
+}
+
+void cmd::print(tree_node *n)
+{
+	if(n == nullptr)
+	{
+		return;
+	}
+
 	std::string err;
 	auto value = render(n, err);
 	if(err != "")
@@ -547,7 +557,11 @@ void cmd::exec(const tokens_t &cmd)
 		}
 		else
 		{
-			inter->evaluate(raw_input);
+			tree_node *n = inter->evaluate(raw_input);
+			if(n != nullptr)
+			{
+				print(n);
+			}
 		}
 	}
 	else
@@ -690,6 +704,13 @@ void cmd::print_node(tree_node *n, std::string prefix)
 	{
 		return;
 	}
+	
+	if(visited_nodes_set.find(n) != visited_nodes_set.end())
+	{
+		return;
+	}
+	visited_nodes_set.insert(n);
+	
 	std::string name = n->get_name();
 	name = name.size() ? name : "/";
 	printf("%s%s\n", prefix.c_str(), name.c_str());
@@ -725,6 +746,7 @@ void cmd::tree(const tokens_t &t)
 		return;
 	}
 	print_node(n);
+	visited_nodes_set.clear();
 }
 
 tree_node *cmd::generate(const std::string &type)

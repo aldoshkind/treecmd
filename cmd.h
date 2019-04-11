@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <thread>
@@ -17,7 +18,7 @@ class interpreter
 {
 public:
 	virtual ~interpreter(){}
-	virtual void evaluate(std::string) = 0;
+	virtual tree_node *evaluate(std::string) = 0;
 };
 
 class cmd
@@ -49,6 +50,9 @@ class cmd
 	void print_status(const std::string &status);
 
 	std::string raw_input;
+	
+	typedef std::set<tree_node *>		visited_nodes_set_t;
+	visited_nodes_set_t					visited_nodes_set;
 
 public:
 	/*constructor*/ cmd(tree_node *root);
@@ -81,6 +85,7 @@ public:
 	void set(const std::string &target, const std::string &value);
 
 	void print(const std::string &target);
+	void print(tree_node *n);
 	void eval(const tokens_t &tok);
 
 	void set_interpreter(interpreter *in);
