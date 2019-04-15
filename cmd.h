@@ -19,6 +19,7 @@ class interpreter
 public:
 	virtual ~interpreter(){}
 	virtual tree_node *evaluate(std::string) = 0;
+	virtual void set_root(tree_node *root) = 0;
 };
 
 class cmd
