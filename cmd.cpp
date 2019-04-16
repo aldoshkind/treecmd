@@ -476,11 +476,11 @@ void cmd::print(tree_node *n)
 	auto value = render(n, err);
 	if(err != "")
 	{
-		printf("%s\n", err.c_str());
+		printf("treecmd: %s\n", err.c_str());
 	}
 	else
 	{
-		printf("%s\n", value.c_str());
+		printf("treecmd: %s\n", value.c_str());
 	}
 }
 
