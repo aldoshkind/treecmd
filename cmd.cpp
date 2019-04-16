@@ -730,6 +730,7 @@ void cmd::print_node(tree_node *n, std::string prefix)
 
 		print_node(child, prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
 	}
+	visited_nodes_set.erase(n);
 }
 
 void cmd::tree(const tokens_t &t)
