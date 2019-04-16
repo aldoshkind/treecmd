@@ -241,7 +241,7 @@ void cmd::ln(const tokens_t &t)
 {
 	if(t.size() < 3)
 	{
-		printf("usage: ln from to");
+		printf("usage: ln from to\n");
 		return;
 	}
 	
