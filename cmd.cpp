@@ -192,6 +192,10 @@ void cmd::cd(const tokens_t &t)
 		if(n != nullptr)
 		{
 			current_node_path = path;
+			if(inter)
+			{
+				inter->set_root(n);
+			}
 		}
 		else
 		{
@@ -705,17 +709,17 @@ void cmd::print_node(tree_node *n, std::string prefix)
 		return;
 	}
 	
-	if(visited_nodes_set.find(n) != visited_nodes_set.end())
-	{
-		return;
-	}
-	visited_nodes_set.insert(n);
-	
 	std::string name = n->get_name();
 	name = name.size() ? name : "/";
 	printf("%s%s\n", prefix.c_str(), name.c_str());
 	replace_if_at_end(prefix, "\u251c", "\u2502");
 	replace_if_at_end(prefix, "\u2514", " ");
+
+	if(visited_nodes_set.find(n) != visited_nodes_set.end())
+	{
+		return;
+	}
+	visited_nodes_set.insert(n);
 
 	tree_node::ls_list_t children = n->ls();
 
