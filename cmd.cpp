@@ -51,6 +51,9 @@ void cmd::init()
 	add_type(new type_numeric<int>());
 	add_type(new type_numeric<long>());
 	add_type(new type_numeric<long long>());
+	add_type(new type_numeric<char>());
+	add_type(new type_numeric<signed char>());
+	add_type(new type_numeric<unsigned char>());
 	add_type(new type_bool());
 	add_type(new type_qstring());
 }

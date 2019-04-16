@@ -184,7 +184,8 @@ int type_numeric<T>::get(property_base *prop, std::string &value)
 	}
 
 	std::stringstream render;
-	render << pd->get_value();
+	// + here forces promotion to number (significant for char and its signed/unsigned forms)
+	render << +pd->get_value();
 	value = render.str();
 
 	return 0;
