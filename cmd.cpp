@@ -51,6 +51,9 @@ void cmd::init()
 	add_type(new type_numeric<int>());
 	add_type(new type_numeric<long>());
 	add_type(new type_numeric<long long>());
+	add_type(new type_numeric<char>());
+	add_type(new type_numeric<signed char>());
+	add_type(new type_numeric<unsigned char>());
 	add_type(new type_bool());
 	add_type(new type_qstring());
 }
@@ -241,7 +244,7 @@ void cmd::ln(const tokens_t &t)
 {
 	if(t.size() < 3)
 	{
-		printf("usage: ln from to");
+		printf("usage: ln from to\n");
 		return;
 	}
 	
@@ -473,11 +476,11 @@ void cmd::print(tree_node *n)
 	auto value = render(n, err);
 	if(err != "")
 	{
-		printf("%s\n", err.c_str());
+		printf("treecmd: %s\n", err.c_str());
 	}
 	else
 	{
-		printf("%s\n", value.c_str());
+		printf("treecmd: %s\n", value.c_str());
 	}
 }
 
@@ -734,6 +737,7 @@ void cmd::print_node(tree_node *n, std::string prefix)
 
 		print_node(child, prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
 	}
+	visited_nodes_set.erase(n);
 }
 
 void cmd::tree(const tokens_t &t)
