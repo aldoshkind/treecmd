@@ -48,8 +48,8 @@ int main(int argc, char **argv)
 	conn.set_listener(&sc);
 	conn.connect(host, port);
 	sleep(1);
-	socket_device sd(&sc);
-	
+	treeipc::socket_device sd(&sc);
+
 	treeipc::client_nonroot cl;
 	cl.set_device(&sd);
 	sd.set_listener(&cl);
