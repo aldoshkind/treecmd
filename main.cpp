@@ -18,7 +18,7 @@
 #include "../treeipc/client.h"
 #include "../treeipc/client_nonroot.h"
 #include "../treeipc/socket_client.h"
-#include "../treeipc/socket_device.h"
+#include "../treeipc/package_stream.h"
 
 int main(int argc, char **argv)
 {
@@ -42,26 +42,20 @@ int main(int argc, char **argv)
 		port = rd_port;
 	}
 
-
 	socket_client sc;
-	connector conn;
+	connector conn(port, host);
 	conn.set_listener(&sc);
-	conn.connect(host, port);
-	sleep(1);
-	treeipc::socket_device sd(&sc);
+	conn.set_do_reconnect(true);
+	sc.set_connector(&conn);
+	//sleep(1);
+	treeipc::request_reply_dispatcher sd(&sc);
 
 	treeipc::client_nonroot cl;
 	cl.set_device(&sd);
 	sd.set_listener(&cl);
 	
 	cl.set_root(&root);
-
-	/*tree_node a;
-	root.attach("a", &a, false);
-	auto tnid = new tree_node_inherited<property_value<double>>;
-	root.attach("b", tnid);
-	
-	a.attach("b", tnid, false);*/
+	conn.connect();
 
 	treecmd::cmd c(&root);
 	c.run();

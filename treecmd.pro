@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     ../treeipc/property_fake.cpp \
     ../treeipc/proxy_node_generator.cpp \
     ../treeipc/node_sync.cpp \
-    ../treeipc/client_nonroot.cpp
+    ../treeipc/client_nonroot.cpp \
+	../treeipc/package_stream.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
@@ -32,15 +33,16 @@ HEADERS += \
     type.h \
     ../treeipc/client.h \
     ../treeipc/client_node.h \
-    ../treeipc/device.h \
+    ../treeipc/package_stream.h \
     ../treeipc/io_service.h \
+	../treeipc/node_sync.h \
     ../treeipc/object_status.h \
     ../treeipc/observable.h \
     ../treeipc/package.h \
     ../treeipc/property_serializer.h \
-    ../treeipc/reliable_serial.h \
+    ../treeipc/reliable_bytestream_base.h \
     ../treeipc/socket_client.h \
-    ../treeipc/socket_device.h \
+    ../treeipc/package_stream.h \
     ../treeipc/property_fake.h \
     ../treeipc/locking_queue.h \
     ../treeipc/client_nonroot.h \
