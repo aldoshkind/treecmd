@@ -655,7 +655,7 @@ void cmd::mknode(const tokens_t &t)
 			n->attach(node_name, new_node);
 		}
 
-		printf("%s %s\n", path.c_str(), status.c_str());
+		printf("%s: %s: %s\n", __func__, path.c_str(), status.c_str());
 	}
 }
 
