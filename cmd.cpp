@@ -1,6 +1,7 @@
 #include "cmd.h"
 
 #include <functional>
+#include <sstream>
 
 #include <boost/bind.hpp>
 
@@ -94,9 +95,8 @@ char *character_name_generator(const char *text, int state)
 	std::string::size_type last_slash_pos = tx.find_last_of('/');
 	std::string prefix = (last_slash_pos == std::string::npos) ? "" : tx.substr(0, last_slash_pos);
 
-	while(list_index < children.size())
+	for(auto &name : children)
 	{
-		std::string name = children[list_index++];
 		std::string suffix = (prefix.size() > 0) ? "/" : "";
 		std::string opt = prefix + suffix + name;
 		if((strncmp(opt.c_str(), text, len) == 0) || text[strlen(text) - 1] == '/')
@@ -342,12 +342,6 @@ void cmd::mv(const tokens_t &t)
 			return;
 		}
 		
-		if(parent->find(from) != nullptr)
-		{
-			print_status("source and destination are the same");
-			return;
-		}
-		
 		from = ((tree_node *)from->get_parent())->detach(from);
 		
 		if(from == nullptr)
@@ -367,6 +361,7 @@ void cmd::ls(const tokens_t &t)
 {
 	std::string path;
 	bool show_values = false;
+	bool show_info = false;
 
 	if(t.size() < 2)
 	{
@@ -381,6 +376,10 @@ void cmd::ls(const tokens_t &t)
 				if(t[i][1] == 'v')
 				{
 					show_values = true;
+				}
+				if(t[i][1] == 'i')
+				{
+					show_info = true;
 				}
 			}
 			else
@@ -397,7 +396,7 @@ void cmd::ls(const tokens_t &t)
 		printf("\"%s\" does not exist\n", path.c_str());
 		return;
 	}
-	tree_node::ls_list_t items = n->ls();
+	tree_node::string_list_t items = n->ls();
 	printf("total: %d items\n", (int)items.size());
 	for(auto item : items)
 	{
@@ -413,6 +412,19 @@ void cmd::ls(const tokens_t &t)
 				printf("\t\t'%s'", value.c_str());
 			}
 		}
+		
+		if(show_info)
+		{
+			std::string err;
+			std::stringstream ss;
+			ss << std::hex << nd;
+			std::string ptr = ss.str();
+			std::string path = absolute_path(nd->get_path());
+			if(err == "")
+			{
+				printf("\t\t'%s'\t\t'%s'", ptr.c_str(), path.c_str());
+			}
+		}
 		printf("\n");
 	}
 }
@@ -422,7 +434,7 @@ void cmd::set(tree_node *n, std::string value)
 	property_base *p = dynamic_cast<property_base *>(n);
 	if(p == NULL)
 	{
-		printf("Cant set node %s\n", n->get_name().c_str());
+		printf("Cant set node %s\n", n->get_name(nullptr).c_str());
 		return;
 	}
 
@@ -497,7 +509,7 @@ void cmd::eval(const tokens_t &tok)
 		expr += tok[i];
 	}
 
-	std::string::size_type ass_sign_pos = expr.find_last_of("=");
+	std::string::size_type ass_sign_pos = expr.find_first_of("=");
 	if(ass_sign_pos == std::string::npos)
 	{
 		print(tok[0]);
@@ -705,14 +717,13 @@ void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
 	}
 }
 
-void cmd::print_node(tree_node *n, std::string prefix)
+void cmd::print_node(tree_node *n, tree_node *parent, std::string name, std::string prefix)
 {
 	if(n == NULL)
 	{
 		return;
 	}
 	
-	std::string name = n->get_name();
 	name = name.size() ? name : "/";
 	printf("%s%s\n", prefix.c_str(), name.c_str());
 	replace_if_at_end(prefix, "\u251c", "\u2502");
@@ -724,18 +735,18 @@ void cmd::print_node(tree_node *n, std::string prefix)
 	}
 	visited_nodes_set.insert(n);
 
-	tree_node::ls_list_t children = n->ls();
+	tree_node::string_list_t children = n->ls();
 
-	for(tree_node::ls_list_t::size_type i = 0 ; i < children.size() ; i += 1)
+	for(auto &name : children)
 	{
-		tree_node *child = n->at(children[i]);
+		tree_node *child = n->at(name);
 
 		if(child == NULL)
 		{
 			continue;
 		}
 
-		print_node(child, prefix + ((i == (children.size() - 1)) ? "\u2514" : "\u251c"));
+		print_node(child, n, name, prefix + ((children.back() == name) ? "\u2514" : "\u251c"));
 	}
 	visited_nodes_set.erase(n);
 }
@@ -753,7 +764,10 @@ void cmd::tree(const tokens_t &t)
 		printf("node does not exist\n");
 		return;
 	}
-	print_node(n);
+	std::string base;
+	std::string name;
+	extract_next_level_name(path, base, name);
+	print_node(n, root, name);
 	visited_nodes_set.clear();
 }
 
@@ -774,13 +788,13 @@ void cmd::run_in_thread()
 	cmd_thread = std::thread(std::bind(&cmd::run, this));
 }
 
-tree_node::ls_list_t cmd::ls_for(const std::string &text)
+tree_node::string_list_t cmd::ls_for(const std::string &text)
 {
 	std::string s = absolute_path(text);
 	tree_node *n = root->get(s, false);
 	if(n != nullptr)
 	{
-		tree_node::ls_list_t children = n->ls();
+		tree_node::string_list_t children = n->ls();
 		for(auto &child : children)
 		{
 			tree_node *ch = n->at(child);
@@ -797,7 +811,7 @@ tree_node::ls_list_t cmd::ls_for(const std::string &text)
 	n = root->get(s, false);
 	if(n != nullptr)
 	{
-		tree_node::ls_list_t children = n->ls();
+		tree_node::string_list_t children = n->ls();
 		for(auto &child : children)
 		{
 			tree_node *ch = n->at(child);
@@ -808,7 +822,7 @@ tree_node::ls_list_t cmd::ls_for(const std::string &text)
 		}
 		return children;
 	}
-	return tree_node::ls_list_t();
+	return tree_node::string_list_t();
 }
 
 void cmd::print_status(const std::string &s)
