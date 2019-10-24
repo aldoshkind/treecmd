@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	tree_node root;
 
-	std::string host = "127.0.0.1";
+	/*std::string host = "127.0.0.1";
 	int port = 13233;
 	std::string port_str = std::to_string(port);
 	if(argc > 1)
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	sd.set_listener(&cl);
 	
 	cl.set_root(&root);
-	conn.connect();
+	conn.connect();*/
 
 	treecmd::cmd c(&root);
 	c.run();

@@ -94,9 +94,10 @@ char *character_name_generator(const char *text, int state)
 	std::string tx(text);
 	std::string::size_type last_slash_pos = tx.find_last_of('/');
 	std::string prefix = (last_slash_pos == std::string::npos) ? "" : tx.substr(0, last_slash_pos);
-
-	for(auto &name : children)
+	
+	while(list_index < children.size())
 	{
+		std::string name = *std::next(children.begin(), list_index++);
 		std::string suffix = (prefix.size() > 0) ? "/" : "";
 		std::string opt = prefix + suffix + name;
 		if((strncmp(opt.c_str(), text, len) == 0) || text[strlen(text) - 1] == '/')
@@ -373,13 +374,16 @@ void cmd::ls(const tokens_t &t)
 		{
 			if(t[i].size() > 1 && t[i][0] == '-')
 			{
-				if(t[i][1] == 'v')
+				for(size_t p = 1 ; p < t[i].size() ; p += 1)
 				{
-					show_values = true;
-				}
-				if(t[i][1] == 'i')
-				{
-					show_info = true;
+					if(t[i][p] == 'v')
+					{
+						show_values = true;
+					}
+					if(t[i][p] == 'i')
+					{
+						show_info = true;
+					}
 				}
 			}
 			else
