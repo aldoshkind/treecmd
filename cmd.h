@@ -6,8 +6,9 @@
 #include <vector>
 #include <thread>
 
-#include "tree/tree_node.h"
 #include <boost/function.hpp>
+
+#include "tree/tree_node.h"
 
 #include "type.h"
 
