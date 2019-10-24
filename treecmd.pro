@@ -3,47 +3,51 @@ QT += core
 TEMPLATE = app
 CONFIG += console c++11
 
-INCLUDEPATH += ./treeipc ../tree ../
+INCLUDEPATH += $$TREE_PATH $$TREE_PATH/treeipc
 
 SOURCES += main.cpp \
+    $$TREE_PATH/tree/filepath_utils.cpp \
+    $$TREE_PATH/tree/resource.cpp \
+    $$TREE_PATH/tree/property_listener.cpp \
     cmd.cpp \
-    ../tree/filepath_utils.cpp \
-    ../tree/property_listener.cpp \
-    ../tree/tree_node.cpp \
-    ../treeipc/client.cpp \
-    ../treeipc/client_node.cpp \
-    ../treeipc/io_service.cpp \
-    ../treeipc/package.cpp \
-    ../treeipc/socket_client.cpp \
-    ../tree/tree_node_inherited.cpp \
-    ../treeipc/property_fake.cpp \
-    ../treeipc/proxy_node_generator.cpp \
-    ../treeipc/node_sync.cpp \
-    ../treeipc/client_nonroot.cpp \
-	../treeipc/package_stream.cpp
+    numeric_property_gsg.cpp \
+    $$TREE_PATH/treeipc/client.cpp \
+    $$TREE_PATH/treeipc/client_node.cpp \
+    $$TREE_PATH/treeipc/io_service.cpp \
+    $$TREE_PATH/treeipc/package.cpp \
+    $$TREE_PATH/treeipc/server.cpp \
+    $$TREE_PATH/treeipc/socket_client.cpp
 
 LIBS += -lreadline -lboost_system -pthread
 
 HEADERS += \
+    $$TREE_PATH/tree/filepath_utils.h \
+    $$TREE_PATH/tree/node.h \
+    $$TREE_PATH/tree/resource.h \
+    $$TREE_PATH/treeipc/reliable_serial.h \
+    $$TREE_PATH/treeipc/io_service.h \
+	$$TREE_PATH/treeipc/client.h \
+    $$TREE_PATH/treeipc/observable.h \
+    $$TREE_PATH/treeipc/device.h \
+    $$TREE_PATH/treeipc/socket_device.h \
+    $$TREE_PATH/treeipc/socket_client.h \
     cmd.h \
     typeidable.h \
-    ../tree/filepath_utils.h \
-    ../tree/property_listener.h \
-    ../tree/tree_node.h \
-    type.h \
-    ../treeipc/client.h \
-    ../treeipc/client_node.h \
-    ../treeipc/package_stream.h \
-    ../treeipc/io_service.h \
-	../treeipc/node_sync.h \
-    ../treeipc/object_status.h \
-    ../treeipc/observable.h \
-    ../treeipc/package.h \
-    ../treeipc/property_serializer.h \
-    ../treeipc/reliable_bytestream_base.h \
-    ../treeipc/socket_client.h \
-    ../treeipc/package_stream.h \
-    ../treeipc/property_fake.h \
-    ../treeipc/locking_queue.h \
-    ../treeipc/client_nonroot.h \
-    ../tree/property.h
+    property_setter.h \
+    property_getter.h \
+    property_generator.h \
+    numeric_property_gsg.h \
+    $$TREE_PATH/treeipc/acceptor.h \
+    $$TREE_PATH/treeipc/client.h \
+    $$TREE_PATH/treeipc/client_node.h \
+    $$TREE_PATH/treeipc/conn_server.h \
+    $$TREE_PATH/treeipc/device.h \
+    $$TREE_PATH/treeipc/io_service.h \
+    $$TREE_PATH/treeipc/object_status.h \
+    $$TREE_PATH/treeipc/observable.h \
+    $$TREE_PATH/treeipc/package.h \
+    $$TREE_PATH/treeipc/property_serializer.h \
+    $$TREE_PATH/treeipc/pseudodevice.h \
+    $$TREE_PATH/treeipc/server.h \
+    $$TREE_PATH/treeipc/socket_client.h \
+    $$TREE_PATH/treeipc/socket_device.h
