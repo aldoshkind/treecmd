@@ -721,7 +721,7 @@ void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
 	}
 }
 
-void cmd::print_node(tree_node *n, tree_node *parent, std::string name, std::string prefix)
+void cmd::print_node(tree_node *n, tree_node */*parent*/, std::string name, std::string prefix)
 {
 	if(n == NULL)
 	{
