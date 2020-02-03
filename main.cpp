@@ -20,7 +20,7 @@
 #include "../treeipc/socket_client.h"
 #include "../treeipc/package_stream.h"
 
-int main(int argc, char **argv)
+int main(int /*argc*/, char **/*argv*/)
 {
 	tree_node root;
 

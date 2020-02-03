@@ -343,7 +343,7 @@ void cmd::mv(const tokens_t &t)
 			return;
 		}
 		
-		from = ((tree_node *)from->get_parent())->detach(from);
+		from = ((tree_node *)from->get_owner())->detach(from);
 		
 		if(from == nullptr)
 		{
