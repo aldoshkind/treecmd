@@ -159,7 +159,7 @@ std::string cmd::absolute_path(std::string p)
 		p = current_node_path + "/" + p;
 	}
 
-	clean_path(p);
+	tree::filepath_utils::clean_path(p);
 
 	auto dot_pos = p.find_last_of('.');
 
@@ -174,7 +174,7 @@ std::string cmd::absolute_path(std::string p)
 	}
 
 	p = current_node_path + "/" + p;
-	clean_path(p);
+	tree::filepath_utils::clean_path(p);
 	return p;
 }
 
@@ -266,7 +266,7 @@ void cmd::ln(const tokens_t &t)
 		{
 			parent_path = path_dst;
 			std::string src_path_unused;
-			extract_last_level_name(path_src, src_path_unused, node_name);
+			tree::filepath_utils::extract_last_level_name(path_src, src_path_unused, node_name);
 		}
 		else
 		{
@@ -277,7 +277,7 @@ void cmd::ln(const tokens_t &t)
 			}
 			else
 			{
-				extract_last_level_name(path_dst, parent_path, node_name);
+				tree::filepath_utils::extract_last_level_name(path_dst, parent_path, node_name);
 			}
 		}
 		if(status == "")
@@ -323,11 +323,11 @@ void cmd::mv(const tokens_t &t)
 		{
 			parent_path = path_dst;
 			std::string src_path_unused;
-			extract_last_level_name(path_src, src_path_unused, node_name);
+			tree::filepath_utils::extract_last_level_name(path_src, src_path_unused, node_name);
 		}
 		else
 		{
-			extract_last_level_name(path_dst, parent_path, node_name);
+			tree::filepath_utils::extract_last_level_name(path_dst, parent_path, node_name);
 		}
 		
 		tree_node *parent = root->at(parent_path);
@@ -770,7 +770,7 @@ void cmd::tree(const tokens_t &t)
 	}
 	std::string base;
 	std::string name;
-	extract_next_level_name(path, base, name);
+	tree::filepath_utils::extract_next_level_name(path, base, name);
 	print_node(n, root, name);
 	visited_nodes_set.clear();
 }
