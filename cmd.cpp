@@ -707,7 +707,7 @@ void cmd::get_types(const tokens_t &/*t*/)
 	}
 }
 
-void cmd::replace_if_at_end(std::string &str, char *pattern, char *replacement)
+void cmd::replace_if_at_end(std::string &str, const char *pattern, const char *replacement)
 {
 	if(str.size() < strlen(pattern))
 	{

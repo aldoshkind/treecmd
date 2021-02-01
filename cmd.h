@@ -43,7 +43,7 @@ class cmd
 	
 	std::thread cmd_thread;
 
-	void replace_if_at_end(std::string &str, char *pattern, char *replacement);
+	void replace_if_at_end(std::string &str, const char *pattern, const char *replacement);
 	void print_node(tree_node *n, tree_node *parent, std::string name, std::string prefix = "");
 
 	void add_type(type *t);
