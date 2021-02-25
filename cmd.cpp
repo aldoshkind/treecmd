@@ -542,12 +542,24 @@ cmd::tokens_t cmd::tokenize(const std::string &str)
 		std::string::size_type end = std::string::npos;
 		if(str[start] == '"')
 		{
-			start += 1;
-			end = str.find_first_of('"', start);
+            start = start + 1;
+            end = str.find_last_of('"');
+            if (start > end)
+            {
+                end = std::string::npos;
+            }
 		}
 		else
 		{
-			end = str.find_first_of(' ', start);
+            auto equation_token_pos = str.find_first_of('=', start);
+            if (equation_token_pos != std::string::npos)
+            {
+                end = equation_token_pos;
+            }
+            else
+            {
+                end = str.find_first_of(' ', start);
+            }
 		}
 		if(end == std::string::npos)
 		{
@@ -556,8 +568,21 @@ cmd::tokens_t cmd::tokenize(const std::string &str)
 		}
 		else
 		{
-			res.push_back(str.substr(start, end - start));
-			pos = end + 1;
+            auto token = str.substr(start, end - start);
+            if (str[end] == '=')
+            {
+                while(token.at(token.size() - 1) == ' ')
+                {
+                    token.erase(token.end() - 1);
+                }
+                res.push_back(token);
+                res.push_back("=");
+            }
+            else
+            {
+                res.push_back(token);
+            }
+            pos = end + 1;
 		}
 	}
 
